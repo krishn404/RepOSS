@@ -17,7 +17,13 @@ const OFFSET_FACTOR = 4;
 const SCALE_FACTOR = 0.03;
 const OPACITY_FACTOR = 0.1;
 
-export function News({ articles }: { articles: NewsArticle[] }) {
+interface NewsProps {
+  articles: NewsArticle[];
+  variant?: "default" | "compact";
+  className?: string;
+}
+
+export function News({ articles, variant = "default", className }: NewsProps) {
   const [dismissedNews, setDismissedNews] = React.useState<string[]>([]);
   const cards = articles.filter(({ href }) => !dismissedNews.includes(href));
   const cardCount = cards.length;
@@ -30,9 +36,17 @@ export function News({ articles }: { articles: NewsArticle[] }) {
     return () => clearTimeout(timeout);
   }, [cardCount]);
 
+  const paddingClass = variant === "compact" ? "pt-4 pb-1" : "pt-8 pb-3";
+  const heightClass = variant === "compact" ? "max-h-60" : "max-h-72";
+
   return cards.length || showCompleted ? (
     <div
-      className="group overflow-hidden px-3 pb-3 pt-8"
+      className={cn(
+        "group overflow-hidden px-3",
+        paddingClass,
+        heightClass,
+        className
+      )}
       data-active={cardCount !== 0}
     >
       <div className="relative size-full">
@@ -70,11 +84,12 @@ export function News({ articles }: { articles: NewsArticle[] }) {
               onDismiss={() =>
                 setDismissedNews([href, ...dismissedNews.slice(0, 50)])
               }
+              compact={variant === "compact"}
             />
           </div>
         ))}
         <div className="pointer-events-none invisible" aria-hidden>
-          <NewsCard title="Title" description="Description" />
+          <NewsCard title="Title" description="Description" compact={variant === "compact"} />
         </div>
         {showCompleted && !cardCount && (
           <div
@@ -100,6 +115,7 @@ function NewsCard({
   hideContent,
   href,
   active,
+  compact = false,
 }: {
   title: string;
   description: string;
@@ -108,6 +124,7 @@ function NewsCard({
   hideContent?: boolean;
   href?: string;
   active?: boolean;
+  compact?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -214,7 +231,8 @@ function NewsCard({
     <Card
       ref={ref}
       className={cn(
-        "relative select-none gap-2 p-3 text-[0.8125rem]",
+        "relative mb-4 select-none gap-2 text-[0.8125rem]",
+        compact ? "mb-2.5 rounded-lg p-2 text-[0.75rem]" : "p-3",
         "translate-x-[calc(var(--dx)*1px)] rotate-[calc(var(--dx)*0.05deg)] opacity-[calc(1-max(var(--dx),-1*var(--dx))/var(--w)/2)]",
         "transition-shadow data-[dragging=true]:shadow-md"
       )}
@@ -223,15 +241,30 @@ function NewsCard({
       onClick={onClick}
     >
       <div className={cn(hideContent && "invisible")}>
-        <div className="flex flex-col gap-1">
-          <span className="line-clamp-1 font-medium text-foreground">
+        <div className={cn("flex flex-col gap-1", compact && "gap-0.5")}>
+          <span
+            className={cn(
+              "line-clamp-1 font-medium text-foreground",
+              compact && "text-sm"
+            )}
+          >
             {title}
           </span>
-          <p className="line-clamp-2 h-10 leading-5 text-muted-foreground">
+          <p
+            className={cn(
+              "line-clamp-2 text-muted-foreground",
+              compact ? "h-8 text-xs leading-4" : "h-10 leading-5"
+            )}
+          >
             {description}
           </p>
         </div>
-        <div className="relative mt-3 aspect-[16/9] w-full shrink-0 overflow-hidden rounded border bg-muted">
+        <div
+          className={cn(
+            "relative w-full shrink-0 overflow-hidden rounded border bg-muted",
+            compact ? "mt-2 aspect-[5/2]" : "mt-3 aspect-[16/9]"
+          )}
+        >
           {image && (
             <div 
               className={`w-full h-full rounded relative overflow-hidden mesh-gradient ${
@@ -255,7 +288,12 @@ function NewsCard({
             "sm:group-has-[*[data-dragging=true]]:h-7 sm:group-has-[*[data-dragging=true]]:opacity-100 sm:group-hover:group-data-[active=true]:h-7 sm:group-hover:group-data-[active=true]:opacity-100"
           )}
         >
-          <div className="flex items-center justify-between pt-3 text-xs">
+          <div
+            className={cn(
+              "flex items-center justify-between text-xs",
+              compact ? "pt-2" : "pt-3"
+            )}
+          >
             <Link
               href={href || "https://dub.co"}
               target="_blank"

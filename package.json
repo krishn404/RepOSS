@@ -48,7 +48,7 @@
     "@tabler/icons-react": "latest",
     "@tanstack/react-table": "latest",
     "@upstash/redis": "latest",
-    "@vercel/analytics": "latest",
+    "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",

@@ -151,7 +151,7 @@ export function RepoTable({
                           </a>
                         </TooltipTrigger>
                         {repo.description ? (
-                          <TooltipContent side="right" sideOffset={8} className="max-w-xs">
+                          <TooltipContent side="right" sideOffset={8} className="max-w-sm" clampLines={6}>
                             <div className="flex items-start gap-3">
                               <Avatar className="w-8 h-8 ring-1 ring-border/40">
                                 <AvatarImage
@@ -168,7 +168,7 @@ export function RepoTable({
                               </Avatar>
                               <div className="space-y-1">
                                 <p className="text-xs text-muted-foreground">{repo.owner.login}</p>
-                                <p className="text-sm leading-relaxed">{repo.description}</p>
+                                <p className="text-sm leading-relaxed line-clamp-4">{repo.description}</p>
                                 <div className="flex items-center gap-3 pt-1">
                                   <span className="inline-flex items-center gap-1 text-xs">
                                     <Star className="w-3.5 h-3.5 text-yellow-400" />

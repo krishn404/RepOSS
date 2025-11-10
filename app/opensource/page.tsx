@@ -8,6 +8,7 @@ import { HomeSection } from "@/components/opensource/home-section"
 import { TrendingSection } from "@/components/opensource/trending-section"
 import { DiscoverSection } from "@/components/opensource/discover-section"
 import { BeamsBackground } from "@/components/opensource/bg-beams"
+import { useOpenSourceView } from "@/components/opensource/opensource-context"
 
 type Repo = {
   id: number
@@ -25,15 +26,15 @@ type Repo = {
 export default function OpenSourcePage() {
   const [repositories, setRepositories] = useState<Repo[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeNav, setActiveNav] = useState<"home" | "trending" | "discover">("home")
   const [trendingPeriod, setTrendingPeriod] = useState<"day" | "month" | "year">("day")
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [filters, setFilters] = useState({
     search: "",
     language: "all",
     minStars: "any",
     sortBy: "stars",
   })
+
+  const { activeNav, selectedLanguages, setSelectedLanguages } = useOpenSourceView()
 
   // Debounced sidebar toggle to prevent rapid clicking
   const toggleSidebar = () => {
@@ -209,7 +210,7 @@ export default function OpenSourcePage() {
                   >
                     {lang}
                     <button
-                      onClick={() => setSelectedLanguages(selectedLanguages.filter((l) => l !== lang))}
+                      onClick={() => setSelectedLanguages((prev) => prev.filter((l) => l !== lang))}
                       className="hover:opacity-70 transition-opacity"
                       suppressHydrationWarning
                     >
