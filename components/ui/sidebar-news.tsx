@@ -267,6 +267,7 @@ function NewsCard({
               type="button"
               onClick={dismiss}
               className="text-muted-foreground hover:text-foreground transition-colors duration-75"
+              suppressHydrationWarning
             >
               Dismiss
             </button>

@@ -18,10 +18,7 @@ export const getRepositoriesFromCache = query({
     }
 
     // Return null if cache expired
-    if (cached && cached.expiresAt <= Date.now()) {
-      await ctx.db.delete(cached._id)
-    }
-
+    // Note: Cannot delete in queries (read-only), expired entries will be ignored
     return null
   },
 })
@@ -56,6 +53,16 @@ export const cacheRepositories = mutation({
   async handler(ctx, args) {
     const now = Date.now()
     const expiresAt = now + CACHE_DURATION
+
+    // Delete any existing cache entry with the same key (including expired ones)
+    const existing = await ctx.db
+      .query("repositoriesCache")
+      .withIndex("by_cache_key", (q) => q.eq("cacheKey", args.cacheKey))
+      .first()
+
+    if (existing) {
+      await ctx.db.delete(existing._id)
+    }
 
     await ctx.db.insert("repositoriesCache", {
       cacheKey: args.cacheKey,

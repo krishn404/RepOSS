@@ -102,6 +102,7 @@ export function Sidebar({ activeNav = "home", onNavChange, selectedLanguages = [
                   "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
                   isActive ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5",
                 )}
+                suppressHydrationWarning
               >
                 <Icon className="w-4 h-4" />
                 <span>{item.label}</span>
@@ -116,6 +117,7 @@ export function Sidebar({ activeNav = "home", onNavChange, selectedLanguages = [
         <button
           onClick={() => setFiltersOpen(!filtersOpen)}
           className="w-full flex items-center justify-between px-2 mb-4 text-xs text-gray-500 uppercase tracking-wider hover:text-gray-300 transition-colors"
+          suppressHydrationWarning
         >
           <span>Filters</span>
           <ChevronDown className={cn("w-4 h-4 transition-transform", filtersOpen && "rotate-180")} />
@@ -139,6 +141,7 @@ export function Sidebar({ activeNav = "home", onNavChange, selectedLanguages = [
                           ? `${lang.color} opacity-100 scale-105`
                           : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10",
                       )}
+                      suppressHydrationWarning
                     >
                       {lang.name}
                     </button>

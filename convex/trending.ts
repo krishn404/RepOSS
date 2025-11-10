@@ -17,11 +17,6 @@ export const getTrendingRepositories = query({
       return cached.repositories
     }
 
-    // Delete expired cache
-    if (cached && cached.expiresAt <= Date.now()) {
-      await ctx.db.delete(cached._id)
-    }
-
     return []
   },
 })

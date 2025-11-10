@@ -191,6 +191,7 @@ export default function OpenSourcePage() {
                           ? "bg-white/10 text-white border-white/20"
                           : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
                       }`}
+                      suppressHydrationWarning
                     >
                       {p === "day" ? "Day" : p === "month" ? "Month" : "Year"}
                     </button>
@@ -210,6 +211,7 @@ export default function OpenSourcePage() {
                     <button
                       onClick={() => setSelectedLanguages(selectedLanguages.filter((l) => l !== lang))}
                       className="hover:opacity-70 transition-opacity"
+                      suppressHydrationWarning
                     >
                       ✕
                     </button>
