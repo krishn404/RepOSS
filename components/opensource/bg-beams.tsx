@@ -80,7 +80,7 @@ export function BeamsBackground({
 
         function resetBeam(beam: Beam, index: number, totalBeams: number) {
             if (!canvas) return beam;
-            
+
             const column = index % 3;
             const spacing = canvas.width / 3;
 
@@ -169,9 +169,10 @@ export function BeamsBackground({
     return (
         <div
             className={cn(
-                "relative min-h-screen w-full overflow-hidden bg-neutral-950",
+                "relative min-h-screen w-full overflow-hidden",
                 className
             )}
+            style={{ backgroundColor: "#121212" }}
         >
             <canvas
                 ref={canvasRef}
@@ -180,7 +181,8 @@ export function BeamsBackground({
             />
 
             <motion.div
-                className="absolute inset-0 bg-neutral-950/5"
+                className="absolute inset-0"
+                style={{ backgroundColor: "rgba(18, 18, 18, 0.05)" }}
                 animate={{
                     opacity: [0.05, 0.15, 0.05],
                 }}
@@ -188,9 +190,6 @@ export function BeamsBackground({
                     duration: 10,
                     ease: "easeInOut",
                     repeat: Number.POSITIVE_INFINITY,
-                }}
-                style={{
-                    backdropFilter: "blur(50px)",
                 }}
             />
         </div>

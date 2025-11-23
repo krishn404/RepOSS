@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen text-white p-6" style={{ backgroundColor: "#121212" }}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <Skeleton className="h-10 w-80 mb-2" />
@@ -11,7 +11,7 @@ export default function Loading() {
         </div>
 
         {/* Filters Skeleton */}
-        <Card className="bg-gray-900 border-gray-700 mb-6">
+        <Card className="border-white/10" style={{ backgroundColor: "rgba(255, 255, 255, 0.03)", backdropFilter: "blur(20px)" }}>
           <CardHeader>
             <Skeleton className="h-6 w-16" />
           </CardHeader>
@@ -26,12 +26,12 @@ export default function Loading() {
         </Card>
 
         {/* Table Skeleton */}
-        <Card className="bg-gray-900 border-gray-700">
+        <Card className="border-white/10" style={{ backgroundColor: "rgba(255, 255, 255, 0.03)", backdropFilter: "blur(20px)" }}>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-700">
+                  <tr className="border-b border-white/10">
                     <th className="text-left p-4">
                       <Skeleton className="h-4 w-20" />
                     </th>
@@ -54,7 +54,7 @@ export default function Loading() {
                 </thead>
                 <tbody>
                   {Array.from({ length: 10 }).map((_, index) => (
-                    <tr key={index} className="border-b border-gray-700">
+                    <tr key={index} className="border-b border-white/5">
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
                           <Skeleton className="w-6 h-6 rounded" />

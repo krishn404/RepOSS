@@ -22,7 +22,7 @@ export default function OpenSourceLayout({ children }: { children: ReactNode }) 
 
   return (
     <OpenSourceViewProvider>
-      <div className="flex h-screen w-screen bg-background">
+      <div className="flex h-screen w-screen" style={{ backgroundColor: "#121212" }}>
         {/* Sidebar */}
         <AnimatePresence initial={false}>
           {(!isMobile || (isMobile && isSidebarOpen)) && (
@@ -77,16 +77,16 @@ export default function OpenSourceLayout({ children }: { children: ReactNode }) 
 
         {/* Main Content Area */}
         <motion.main
-          className="flex-1 h-screen overflow-y-auto bg-background"
+          className="flex-1 h-screen overflow-y-auto"
+          style={{ backgroundColor: "#121212" }}
           animate={{
             marginLeft: isMobile ? 0 : isSidebarOpen ? sidebarWidth : handleWidth,
           }}
           transition={{ type: "spring", stiffness: 260, damping: 30 }}
-          style={{ willChange: "margin-left" }}
         >
           {/* Mobile top bar to open sidebar when closed */}
           {isMobile && !isSidebarOpen && (
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+            <div className="sticky top-0 z-10 backdrop-blur border-b border-white/10" style={{ backgroundColor: "rgba(18, 18, 18, 0.8)" }}>
               <div className="h-12 flex items-center px-4">
                 <button
                   onClick={() => setIsSidebarOpen(true)}

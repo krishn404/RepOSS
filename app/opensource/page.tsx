@@ -129,10 +129,10 @@ export default function OpenSourcePage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full text-white">
+    <div className="relative min-h-screen w-full text-white" style={{ backgroundColor: "#121212" }}>
       <BeamsBackground className="fixed inset-0 -z-10" />
 
-      <div className="sticky top-0 z-30 backdrop-blur-lg bg-black/30 border-b border-white/10">
+      <div className="sticky top-0 z-30 backdrop-blur-lg border-b border-white/10" style={{ backgroundColor: "rgba(18, 18, 18, 0.8)" }}>
         <div className="px-6 py-4">
           <div className="flex flex-col gap-4">
             {/* Search and primary filters */}
@@ -143,7 +143,8 @@ export default function OpenSourcePage() {
                   placeholder="Search repositories..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10 transition-colors"
+                  className="pl-10 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20 transition-colors"
+                  style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                 />
               </div>
 
@@ -153,10 +154,10 @@ export default function OpenSourcePage() {
                     value={filters.language}
                     onValueChange={(value) => setFilters({ ...filters, language: value })}
                   >
-                    <SelectTrigger className="w-full sm:w-40 bg-white/5 border-white/10 text-white">
+                    <SelectTrigger className="w-full sm:w-40 border-white/10 text-white" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
                       <SelectValue placeholder="All Languages" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/10 text-white">
+                    <SelectContent className="border-white/10 text-white" style={{ backgroundColor: "#1a1a1a" }}>
                       <SelectItem value="all">All Languages</SelectItem>
                       <SelectItem value="TypeScript">TypeScript</SelectItem>
                       <SelectItem value="JavaScript">JavaScript</SelectItem>
@@ -168,10 +169,10 @@ export default function OpenSourcePage() {
                   </Select>
 
                   <Select value={filters.sortBy} onValueChange={(value) => setFilters({ ...filters, sortBy: value })}>
-                    <SelectTrigger className="w-full sm:w-40 bg-white/5 border-white/10 text-white">
+                    <SelectTrigger className="w-full sm:w-40 border-white/10 text-white" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}>
                       <SelectValue placeholder="Sort By" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/10 text-white">
+                    <SelectContent className="border-white/10 text-white" style={{ backgroundColor: "#1a1a1a" }}>
                       <SelectItem value="stars">Most Stars</SelectItem>
                       <SelectItem value="forks">Most Forks</SelectItem>
                       <SelectItem value="updated">Recently Updated</SelectItem>
@@ -187,11 +188,12 @@ export default function OpenSourcePage() {
                     <button
                       key={p}
                       onClick={() => setTrendingPeriod(p)}
-                      className={`px-3 py-2 rounded-md text-xs sm:text-sm border transition-colors ${
-                        trendingPeriod === p
-                          ? "bg-white/10 text-white border-white/20"
-                          : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
-                      }`}
+                      className={`px-3 py-2 rounded-md text-xs sm:text-sm border transition-colors`}
+                      style={{
+                        backgroundColor: trendingPeriod === p ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)",
+                        borderColor: trendingPeriod === p ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
+                        color: trendingPeriod === p ? "white" : "#a0a0a0"
+                      }}
                       suppressHydrationWarning
                     >
                       {p === "day" ? "Day" : p === "month" ? "Month" : "Year"}

@@ -10,7 +10,7 @@ export function Header() {
             <div className="text-[#37322f] font-semibold text-lg">GitOSS</div>
             
           </div>
-          <Link href="/opensource">
+          <Link href="/auth/signin">
           <div className="cursor-pointer px-2 sm:px-3 md:px-[14px] py-1 sm:py-[6px] bg-white shadow-[0px_1px_2px_rgba(55,50,47,0.12)] overflow-hidden rounded-full flex justify-center items-center">
             <div className="text-[#37322F] text-xs md:text-[13px] font-medium leading-5 font-sans">
               Log in

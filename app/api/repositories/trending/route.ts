@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { Octokit } from "@octokit/rest"
 
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
+  auth: process.env.GITHUB_ACCESS_TOKEN || process.env.GITHUB_TOKEN,
 })
 
 export async function GET() {

@@ -75,13 +75,22 @@ export function RepoTable({
       className={
         isLanding
           ? "rounded-xl bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] overflow-hidden"
-          : "rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden"
+          : "rounded-xl border border-white/10 overflow-hidden backdrop-blur-xl"
+      }
+      style={
+        !isLanding
+          ? {
+            backgroundColor: "rgba(255, 255, 255, 0.03)",
+            backdropFilter: "blur(20px)",
+            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
+          }
+          : undefined
       }
     >
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className={isLanding ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]" : "border-b border-white/10"}>
+            <tr className={isLanding ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]" : "border-b border-white/10"} style={!isLanding ? { backgroundColor: "rgba(255, 255, 255, 0.05)" } : undefined}>
               <th
                 className={
                   "text-left p-3 md:p-4 font-medium text-xs md:text-sm " +
