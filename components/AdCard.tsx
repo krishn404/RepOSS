@@ -24,10 +24,10 @@ export const AdCard = () => {
           </div>
 
           <a
-            href="https://github.com/krishn404/gitOSS"
+            href="https://github.com/krishn404/reposs"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Star GitOSS on GitHub"
+            aria-label="Star reposs on GitHub"
           className="group relative inline-flex items-center gap-1.5 rounded-lg bg-[#2b2b2d] px-5 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-[#3b3b3d] shadow-[0_2px_10px_rgba(0,0,0,0.35),0_6px_18px_rgba(124,92,255,0.25)] hover:shadow-[0_3px_12px_rgba(0,0,0,0.45),0_10px_26px_rgba(124,92,255,0.32)] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
           >
             <span className="relative z-10 text-white transition-opacity duration-300 group-hover:opacity-90">

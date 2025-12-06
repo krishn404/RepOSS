@@ -26,12 +26,12 @@ export default function FooterSection() {
 
         {/* Center: Brand */}
         <div className="text-[#d9d9d9] text-lg font-semibold font-sans">
-          GitOSS
+          reposs
         </div>
 
         {/* Right: Credit */}
         <a
-          href="https://github.com/krishn404/gitOSS"
+          href="https://github.com/krishn404/reposs"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-[#d9d9d9] text-sm font-medium font-sans hover:text-[#a0a0a0] transition-colors"

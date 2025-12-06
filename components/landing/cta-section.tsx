@@ -29,7 +29,7 @@ export default function CTASection() {
               Ready to level up your open source?
             </div>
             <div className="self-stretch text-center text-[#a0a0a0] text-base leading-7 font-sans font-medium">
-              Use gitOSS to discover the right GitHub projects faster,
+              Use reposs to discover the right GitHub projects faster,
               <br />
               track what matters, and focus your time where it counts.
             </div>

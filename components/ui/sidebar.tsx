@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { ChevronDown, Home, TrendingUp, Compass, Heart, PanelLeftClose } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ChevronDown, Home, TrendingUp, Compass, Heart, PanelLeftClose, Bookmark } from "lucide-react"
 import { useOpenSourceView } from "@/components/opensource/opensource-context"
 import { AdCard } from "@/components/AdCard"
 
@@ -11,10 +12,8 @@ export type SidebarProps = {
   onToggle?: () => void
 }
 
-export function Sidebar({
-  isOpen = true,
-  onToggle,
-}: SidebarProps) {
+export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
+  const router = useRouter()
   const { activeNav, setActiveNav, selectedLanguages, toggleLanguage } = useOpenSourceView()
   const [filtersOpen, setFiltersOpen] = useState(true)
 
@@ -30,9 +29,10 @@ export function Sidebar({
   ]
 
   const navItems = [
-    { id: "home" as const, label: "Home", icon: Home },
-    { id: "trending" as const, label: "Trending", icon: TrendingUp },
-    { id: "discover" as const, label: "Discover", icon: Compass },
+    { id: "home" as const, label: "Home", icon: Home, href: "/opensource" },
+    { id: "trending" as const, label: "Trending", icon: TrendingUp, href: "/opensource" },
+    { id: "discover" as const, label: "Discover", icon: Compass, href: "/opensource" },
+    { id: "bookmarks" as const, label: "Bookmarks", icon: Bookmark, href: "/opensource/bookmarks" },
   ]
 
   return (
@@ -41,7 +41,7 @@ export function Sidebar({
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h1 className="text-xl font-bold text-white">GitOSS</h1>
+            <h1 className="text-xl font-bold text-white">reposs</h1>
             <p className="mt-1 text-xs text-gray-400">Discover amazing open-source projects</p>
           </div>
           {onToggle && (
@@ -65,7 +65,12 @@ export function Sidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveNav(item.id)}
+                  onClick={() => {
+                    setActiveNav(item.id)
+                    if (item.href) {
+                      router.push(item.href)
+                    }
+                  }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                     isActive ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white",
@@ -131,16 +136,18 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="mt-4 border-t border-white/10 pt-4 flex justify-center">
-      <a
-        href="https://github.com/sponsors/krishn404?target=krishn404/gitOSS"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 rounded-md border border-white/10 bg-[#1c1c1d] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#2a2a2b] hover:border-white/20"
-      >
-        <Heart size={16} className="text-pink-400" />
-        Sponsor This Project On GitHub
-      </a>
-        </div> 
-        </div>
+        <a
+          href="https://github.com/sponsors/krishn404?target=krishn404/reposs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-md border border-white/10 bg-[#1c1c1d] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#2a2a2b] hover:border-white/20"
+        >
+          <Heart size={16} className="text-pink-400" />
+          Sponsor This Project On GitHub
+        </a>
+      </div>
+    </div>
   )
 }
+
+

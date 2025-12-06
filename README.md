@@ -1,11 +1,11 @@
-# gitOSS
+# reposs
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Vercel](https://vercel.com/button)](https://gitoss.krishnx.tech/)
-[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-blue.svg)](https://github.com/krishn404/gitOSS)
+[![Vercel](https://vercel.com/button)](https://reposs.krishnx.tech/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-blue.svg)](https://github.com/krishn404/reposs)
 [![Sponsor This](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)](https://github.com/sponsors/krishn404)
 
-**gitOSS** is a web application designed to help you discover, explore, and contribute to open-source GitHub repositories. It provides a user-friendly interface to search, filter, and sort repositories based on various criteria, making it easier to find projects that align with your interests and skills.
+**reposs** is a web application designed to help you discover, explore, and contribute to open-source GitHub repositories. It provides a user-friendly interface to search, filter, and sort repositories based on various criteria, making it easier to find projects that align with your interests and skills.
 
 ## Features
 
@@ -37,11 +37,11 @@ To get a local copy up and running, follow these simple steps.
 
 1. **Clone the repo**
    ```sh
-   git clone https://github.com/krishn404/gitOSS.git
+   git clone https://github.com/krishn404/reposs.git
    ```
 2. **Navigate to the project directory**
    ```sh
-   cd gitOSS
+   cd reposs
    ```
 3. **Install dependencies**
    ```sh

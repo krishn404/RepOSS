@@ -51,7 +51,7 @@ export default function SignInPage() {
     >
       <CardHeader className="space-y-2 text-center">
         <CardTitle className="text-xl font-semibold tracking-tight">
-          GitOSS
+          reposs
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Sign in to explore open-source projects

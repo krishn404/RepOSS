@@ -4,7 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Star, GitFork } from "lucide-react"
+import { Star, GitFork, Bookmark, BookmarkCheck } from "lucide-react"
+import { useBookmarks } from "@/hooks/use-bookmarks"
 
 export interface Repository {
   id: number
@@ -68,6 +69,7 @@ export function RepoTable({
   showRank?: boolean
   variant?: "default" | "landing"
 }) {
+  const { isBookmarked, toggleBookmark } = useBookmarks()
   const isLanding = variant === "landing"
 
   return (
@@ -138,6 +140,14 @@ export function RepoTable({
                 }
               >
                 Popularity
+              </th>
+              <th
+                className={
+                  "w-10 text-right p-3 md:p-4 font-medium text-xs md:text-sm " +
+                  (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
+                }
+              >
+                Save
               </th>
             </tr>
           </thead>
@@ -312,6 +322,38 @@ export function RepoTable({
                     </td>
                     <td className="hidden xl:table-cell p-4">
                       <PopularityBadge stars={repo.stargazers_count} index={index} />
+                    </td>
+                    <td className="p-3 md:p-4 text-right">
+                      <button
+                        type="button"
+                        aria-label={isBookmarked(repo.id) ? "Remove bookmark" : "Save bookmark"}
+                        className={
+                          "inline-flex items-center justify-center rounded-full border px-2 py-1 text-xs transition-colors " +
+                          (isBookmarked(repo.id)
+                            ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white")
+                        }
+                        onClick={() =>
+                          toggleBookmark({
+                            id: repo.id,
+                            name: repo.name,
+                            full_name: repo.full_name,
+                            description: repo.description,
+                            language: repo.language,
+                            stargazers_count: repo.stargazers_count,
+                            forks_count: repo.forks_count,
+                            topics: repo.topics,
+                            html_url: repo.html_url,
+                            owner: repo.owner,
+                          })
+                        }
+                      >
+                        {isBookmarked(repo.id) ? (
+                          <BookmarkCheck className="w-4 h-4" />
+                        ) : (
+                          <Bookmark className="w-4 h-4" />
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

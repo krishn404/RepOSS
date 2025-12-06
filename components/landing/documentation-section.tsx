@@ -60,7 +60,7 @@ export default function DocumentationSection() {
             icon={
               <div className="w-[10.50px] h-[10.50px] outline outline-[1.17px] outline-[#d9d9d9] outline-offset-[-0.58px] rounded-full"></div>
             }
-            text="How gitOSS helps"
+            text="How reposs helps"
           />
           <div className="self-stretch text-center flex justify-center flex-col text-[#d9d9d9] text-3xl md:text-5xl font-semibold leading-tight md:leading-[60px] font-sans tracking-tight">
             Everything you need to find your next repo

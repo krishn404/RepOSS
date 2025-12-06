@@ -5,13 +5,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import { Suspense } from "react"
+import { AppSessionProvider } from "@/components/session-provider"
 
 import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "GitOSS - Discover Open Source",
+  title: "reposs - Discover Open Source",
   description: "Explore and discover amazing open-source repositories.",
 }
 
@@ -38,10 +39,12 @@ export default async function RootLayout({
             </Script>
           </>
         ) : null}
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <Suspense>{children}</Suspense>
-          <Toaster />
-        </ThemeProvider>
+        <AppSessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            <Suspense>{children}</Suspense>
+            <Toaster />
+          </ThemeProvider>
+        </AppSessionProvider>
         <Analytics />
       </body>
     </html>

@@ -150,7 +150,7 @@ export default function LandingPage() {
                 <div className="flex justify-center items-center">
                   <div className="flex justify-start items-center">
                     <div className="flex flex-col justify-center text-[#d9d9d9] text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-5 font-sans">
-                      GitOSS
+                      reposs
                     </div>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function LandingPage() {
                     variants={staggerItem}
                     className="w-full max-w-[506.08px] lg:w-[506.08px] text-center flex justify-center flex-col text-[#a0a0a0] sm:text-lg md:text-xl leading-[1.4] sm:leading-[1.45] md:leading-[1.5] lg:leading-7 font-sans px-2 sm:px-4 md:px-0 lg:text-lg font-medium text-sm"
                   >
-                    GitOSS helps you search, filter, and explore GitHub repositories
+                    reposs helps you search, filter, and explore GitHub repositories
                     so you can find the right projects to learn from and contribute to.
                   </motion.div>
                 </div>
@@ -225,18 +225,16 @@ export default function LandingPage() {
                 className="w-full max-w-[497px] lg:w-[497px] flex flex-col justify-center items-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 relative z-10 mt-6 sm:mt-8 md:mt-10 lg:mt-12"
               >
                 <div className="backdrop-blur-[8.25px] flex justify-start items-center gap-4">
-                  <Link href="/auth/signin">
-                    <motion.div
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="cursor-pointer h-10 sm:h-11 md:h-12 px-6 sm:px-8 md:px-10 lg:px-12 py-2 sm:py-[6px] relative bg-[#d9d9d9] shadow-[0px_0px_0px_2.5px_rgba(255,255,255,0.08)_inset] overflow-hidden rounded-full flex justify-center items-center"
-                    >
-                      <div className="w-20 sm:w-24 md:w-28 lg:w-44 h-[41px] absolute left-0 top-[-0.5px] bg-gradient-to-b from-[rgba(255,255,255,0)] to-[rgba(0,0,0,0.10)] mix-blend-multiply"></div>
-                      <div className="text-[#1a1a1a] text-sm sm:text-base md:text-[15px] font-medium leading-5 font-sans">
-                        Start for free
-                      </div>
-                    </motion.div>
-                  </Link>
+                <Link href="/auth/signin">
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -1 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="h-10 sm:h-11 md:h-12 px-6 sm:px-8 md:px-10 rounded-full bg-neutral-200 text-neutral-900 text-sm md:text-base font-medium tracking-tight flex items-center justify-center transition-colors duration-150"
+                  >
+                    Start for free
+                  </motion.button>
+                </Link>
+
 
                 </div>
               </motion.div>
@@ -359,7 +357,7 @@ export default function LandingPage() {
                         <rect x="7" y="7" width="4" height="4" stroke="#d9d9d9" strokeWidth="1" fill="none" />
                       </svg>
                     }
-                    text="Why gitOSS"
+                    text="Why reposs"
                   />
                   <div className="w-full max-w-[598.06px] lg:w-[598.06px] text-center flex justify-center flex-col text-[#d9d9d9] text-xl sm:text-2xl md:text-3xl lg:text-5xl font-semibold leading-tight md:leading-[60px] font-sans tracking-tight">
                     Built for clarity when exploring open source

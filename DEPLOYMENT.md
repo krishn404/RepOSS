@@ -11,7 +11,7 @@
 
 1. Go to GitHub Settings → Developer settings → OAuth Apps
 2. Create a new OAuth App with:
-   - Application name: GitOSS
+   - Application name: reposs
    - Homepage URL: Your Vercel domain (e.g., https://oss-finder.vercel.app)
    - Authorization callback URL: `https://your-domain.vercel.app/api/auth/callback/github`
 3. Note your Client ID and Client Secret

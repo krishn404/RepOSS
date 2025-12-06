@@ -9,14 +9,14 @@ interface FAQItem {
 
 const faqData: FAQItem[] = [
   {
-    question: "What is gitOSS and who is it for?",
+    question: "What is reposs and who is it for?",
     answer:
-      "gitOSS is a web app that helps you discover, explore, and track open source GitHub repositories. It’s built for developers, students, and teams who want a faster way to find projects that match their interests and skills.",
+      "reposs is a web app that helps you discover, explore, and track open source GitHub repositories. It’s built for developers, students, and teams who want a faster way to find projects that match their interests and skills.",
   },
   {
-    question: "Where does gitOSS get its data from?",
+    question: "Where does reposs get its data from?",
     answer:
-      "All repository data comes directly from the GitHub API via Octokit. gitOSS layers search, filters, and curated views on top of GitHub so you always see live stars, forks, activity, and metadata.",
+      "All repository data comes directly from the GitHub API via Octokit. reposs layers search, filters, and curated views on top of GitHub so you always see live stars, forks, activity, and metadata.",
   },
   {
     question: "What can I do with the Trending, Home, and Discover views?",
@@ -24,9 +24,9 @@ const faqData: FAQItem[] = [
       "Trending shows fast-growing repos over different time ranges, Home gives you a clean starting point for filtered search, and Discover highlights recently active projects so you can find maintainers who are still engaged.",
   },
   {
-    question: "Is gitOSS free to use?",
+    question: "Is reposs free to use?",
     answer:
-      "Yes. Today gitOSS is free to use while we iterate on the product. In the future we may add optional pro features for heavy contributors and teams, but searching and browsing open source projects will remain free.",
+      "Yes. Today reposs is free to use while we iterate on the product. In the future we may add optional pro features for heavy contributors and teams, but searching and browsing open source projects will remain free.",
   },
   {
     question: "Do I need a GitHub account or extra setup?",
@@ -34,7 +34,7 @@ const faqData: FAQItem[] = [
       "You can browse public repositories without logging in. Connecting your GitHub account unlocks more personalized experiences and will power upcoming features like saved views and contribution insights.",
   },
   {
-    question: "How do I get started with gitOSS?",
+    question: "How do I get started with reposs?",
     answer:
       "Open the app, choose a view (Home, Trending, or Discover), apply a few filters like language or stars, and start exploring. When you find something you like, click through to GitHub to star, fork, or open your first issue.",
   },
