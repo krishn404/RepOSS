@@ -62,7 +62,7 @@
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
     "marked": "latest",
-    "next": "latest",
+    "next": "15.5.8",
     "next-auth": "latest",
     "next-themes": "latest",
     "nodemailer": "latest",
