@@ -9,6 +9,7 @@ import { TrendingSection } from "@/components/opensource/trending-section"
 import { DiscoverSection } from "@/components/opensource/discover-section"
 import { BeamsBackground } from "@/components/opensource/bg-beams"
 import { useOpenSourceView } from "@/components/opensource/opensource-context"
+import { UserMenu } from "@/components/user-menu"
 
 type Repo = {
   id: number
@@ -135,6 +136,12 @@ export default function OpenSourcePage() {
       <div className="sticky top-0 z-30 backdrop-blur-lg border-b border-white/10" style={{ backgroundColor: "rgba(18, 18, 18, 0.8)" }}>
         <div className="px-6 py-4">
           <div className="flex flex-col gap-4">
+            {/* Header with User Menu */}
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-xl font-semibold text-white">reposs</h1>
+              <UserMenu />
+            </div>
+
             {/* Search and primary filters */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex-1 relative">

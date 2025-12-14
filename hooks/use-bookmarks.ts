@@ -157,7 +157,10 @@ export function useBookmarks() {
           await fetch("/api/bookmarks", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repositoryId: repo.id }),
+            body: JSON.stringify({ 
+              repositoryId: repo.id,
+              repositoryName: validated.full_name ?? validated.name,
+            }),
           })
         } else {
           await fetch("/api/bookmarks", {

@@ -73,4 +73,40 @@ export default defineSchema({
   })
     .index("by_period", ["period"])
     .index("by_expires", ["expiresAt"]),
+
+  // User profiles
+  users: defineTable({
+    userId: v.string(), // NextAuth user ID
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    image: v.optional(v.string()),
+    provider: v.string(), // "github" | "google"
+    providerAccountId: v.string(), // Provider's user ID
+    createdAt: v.number(),
+    lastLoginAt: v.number(),
+    loginCount: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_email", ["email"])
+    .index("by_provider", ["provider"]),
+
+  // User activities log
+  userActivities: defineTable({
+    userId: v.string(),
+    activityType: v.string(), // "login", "bookmark_saved", "bookmark_removed", "search", "repository_view", "preference_updated", etc.
+    details: v.optional(
+      v.object({
+        repositoryId: v.optional(v.number()),
+        repositoryName: v.optional(v.string()),
+        searchQuery: v.optional(v.string()),
+        language: v.optional(v.string()),
+        preferenceType: v.optional(v.string()),
+        preferenceValue: v.optional(v.any()),
+      }),
+    ),
+    timestamp: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_activity_type", ["activityType"])
+    .index("by_timestamp", ["timestamp"]),
 })

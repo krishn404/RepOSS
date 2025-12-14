@@ -46,12 +46,50 @@ export const updateUserPreferences = mutation({
       updatedAt: Date.now(),
     }
 
+    let result
     if (existing) {
       await ctx.db.patch(existing._id, updateData)
-      return await ctx.db.get(existing._id)
+      result = await ctx.db.get(existing._id)
     } else {
       const id = await ctx.db.insert("userPreferences", updateData)
-      return await ctx.db.get(id)
+      result = await ctx.db.get(id)
     }
+
+    // Log preference update activities
+    if (args.preferredLanguages !== undefined) {
+      await ctx.db.insert("userActivities", {
+        userId: args.userId,
+        activityType: "preference_updated",
+        details: {
+          preferenceType: "preferredLanguages",
+          preferenceValue: args.preferredLanguages,
+        },
+        timestamp: Date.now(),
+      })
+    }
+    if (args.theme !== undefined) {
+      await ctx.db.insert("userActivities", {
+        userId: args.userId,
+        activityType: "preference_updated",
+        details: {
+          preferenceType: "theme",
+          preferenceValue: args.theme,
+        },
+        timestamp: Date.now(),
+      })
+    }
+    if (args.resultsPerPage !== undefined) {
+      await ctx.db.insert("userActivities", {
+        userId: args.userId,
+        activityType: "preference_updated",
+        details: {
+          preferenceType: "resultsPerPage",
+          preferenceValue: args.resultsPerPage,
+        },
+        timestamp: Date.now(),
+      })
+    }
+
+    return result
   },
 })

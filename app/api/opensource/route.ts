@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createOctokit } from "@/lib/github"
 import { redis } from "@/lib/redis"
 import { ConvexHttpClient } from "convex/browser"
+import { getServerSession } from "next-auth"
+import { authConfig } from "@/lib/auth"
 
 // Lazy initialization of Convex client to avoid build-time errors
 function getConvexClient() {
@@ -43,6 +45,9 @@ async function fetchTrending(octokit: ReturnType<typeof createOctokit>, periodDa
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authConfig)
+    const userId = session?.user?.id as string | undefined
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
     const language = searchParams.get("language") || ""
@@ -235,6 +240,24 @@ export async function GET(request: NextRequest) {
       await redis.set(cacheKey, repositories, { ex: 3600 })
     } catch (error) {
       console.warn("Failed to cache results:", error)
+    }
+
+    // Log search activity for authenticated users
+    if (userId && convexClient) {
+      try {
+        const activityType = trending === "1" ? "trending_view" : "search"
+        await convexClient.mutation("activities:logActivity" as any, {
+          userId,
+          activityType,
+          details: {
+            searchQuery: search || undefined,
+            language: language && language !== "all" ? language : undefined,
+          },
+        })
+      } catch (error) {
+        console.warn("Failed to log search activity:", error)
+        // Don't fail the request if activity logging fails
+      }
     }
 
     return NextResponse.json({ repositories })

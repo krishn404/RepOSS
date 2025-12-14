@@ -106,9 +106,6 @@ export default function SignInPage() {
           </Button>
         </Link>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-1">
-          By signing in, you agree to our Terms of Service and Privacy Policy
-        </p>
       </CardContent>
     </Card>
       </div>

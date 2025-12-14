@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as activities from "../activities.js";
 import type * as preferences from "../preferences.js";
 import type * as repositories from "../repositories.js";
 import type * as trending from "../trending.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -27,9 +29,11 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  activities: typeof activities;
   preferences: typeof preferences;
   repositories: typeof repositories;
   trending: typeof trending;
+  users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

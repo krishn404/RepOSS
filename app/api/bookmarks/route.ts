@@ -108,12 +108,28 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const repositoryName = repo.full_name ?? repo.name
     await convex.mutation("repositories:saveRepository" as any, {
       userId,
       repositoryId: repo.id,
-      repositoryName: repo.full_name ?? repo.name,
+      repositoryName,
       repositoryUrl: repo.html_url,
     })
+
+    // Log activity
+    try {
+      await convex.mutation("activities:logActivity" as any, {
+        userId,
+        activityType: "bookmark_saved",
+        details: {
+          repositoryId: repo.id,
+          repositoryName,
+        },
+      })
+    } catch (activityError) {
+      console.error("Failed to log bookmark activity:", activityError)
+      // Don't fail the request if activity logging fails
+    }
 
     return NextResponse.json({ ok: true })
   } catch (error) {
@@ -137,6 +153,7 @@ export async function DELETE(request: NextRequest) {
 
   const body = await request.json()
   const repositoryId = body?.repositoryId
+  const repositoryName = body?.repositoryName
 
   if (typeof repositoryId !== "number") {
     return NextResponse.json({ error: "Invalid repository id" }, { status: 400 })
@@ -147,6 +164,22 @@ export async function DELETE(request: NextRequest) {
       userId,
       repositoryId,
     })
+
+    // Log activity
+    try {
+      await convex.mutation("activities:logActivity" as any, {
+        userId,
+        activityType: "bookmark_removed",
+        details: {
+          repositoryId,
+          repositoryName: repositoryName || undefined,
+        },
+      })
+    } catch (activityError) {
+      console.error("Failed to log bookmark removal activity:", activityError)
+      // Don't fail the request if activity logging fails
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("Failed to remove bookmark:", error)
