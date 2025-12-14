@@ -23,14 +23,60 @@ export async function GET() {
     return NextResponse.json({ bookmarks: [], source: "convex_unavailable" as const })
   }
 
-  const octokit = createOctokit()
-
   try {
-    const saved = await convex.query("repositories:getSavedRepositories" as any, { userId })
+    // Query saved repositories from Convex
+    let saved: any[] = []
+    try {
+      const result = await convex.query("repositories:getSavedRepositories" as any, { userId })
+      saved = Array.isArray(result) ? result : []
+    } catch (convexError: any) {
+      console.error("Convex query error:", convexError)
+      // Return empty bookmarks if Convex query fails
+      return NextResponse.json({ bookmarks: [], source: "error" as const }, { status: 500 })
+    }
+
+    // If no saved repositories, return early
+    if (!saved || saved.length === 0) {
+      return NextResponse.json({ bookmarks: [], source: "convex" as const })
+    }
+
+    // Fetch full repository details from GitHub
+    let octokit
+    try {
+      octokit = createOctokit()
+    } catch (octokitError: any) {
+      console.error("Failed to create Octokit client:", octokitError)
+      // Return bookmarks with minimal data if Octokit fails
+      const bookmarks = saved.map((entry: any) => ({
+        id: entry.repositoryId,
+        name: entry.repositoryName,
+        full_name: entry.repositoryName,
+        description: "",
+        language: "",
+        stargazers_count: 0,
+        forks_count: 0,
+        topics: [] as string[],
+        html_url: entry.repositoryUrl,
+        owner: {
+          login: "",
+          avatar_url: "",
+        },
+        savedAt: entry.savedAt ?? Date.now(),
+        upstream: {
+          exists: false,
+          lastCheckedAt: Date.now(),
+        },
+      }))
+      return NextResponse.json({ bookmarks, source: "convex" as const })
+    }
 
     const bookmarks = await Promise.all(
-      (saved || []).map(async (entry: any) => {
+      saved.map(async (entry: any) => {
         try {
+          if (!entry.repositoryId) {
+            throw new Error("Missing repositoryId")
+          }
+
           const { data: repo } = await octokit.request("GET /repositories/{repository_id}", {
             repository_id: entry.repositoryId,
           })
@@ -55,17 +101,19 @@ export async function GET() {
               lastCheckedAt: Date.now(),
             },
           }
-        } catch {
+        } catch (repoError: any) {
+          console.warn(`Failed to fetch repo ${entry.repositoryId} from GitHub:`, repoError?.message || repoError)
+          // Return fallback data if GitHub API fails for this repo
           return {
             id: entry.repositoryId,
-            name: entry.repositoryName,
-            full_name: entry.repositoryName,
+            name: entry.repositoryName || "Unknown",
+            full_name: entry.repositoryName || "unknown/unknown",
             description: "",
             language: "",
             stargazers_count: 0,
             forks_count: 0,
             topics: [] as string[],
-            html_url: entry.repositoryUrl,
+            html_url: entry.repositoryUrl || "",
             owner: {
               login: "",
               avatar_url: "",
@@ -81,9 +129,16 @@ export async function GET() {
     )
 
     return NextResponse.json({ bookmarks, source: "convex" as const })
-  } catch (error) {
-    console.error("Failed to fetch bookmarks from Convex:", error)
-    return NextResponse.json({ bookmarks: [], source: "error" as const }, { status: 500 })
+  } catch (error: any) {
+    console.error("Failed to fetch bookmarks:", error?.message || error, error?.stack)
+    return NextResponse.json(
+      { 
+        bookmarks: [], 
+        source: "error" as const,
+        error: error?.message || "Unknown error" 
+      }, 
+      { status: 500 }
+    )
   }
 }
 
