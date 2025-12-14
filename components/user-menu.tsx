@@ -68,21 +68,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/10" />
-        <DropdownMenuItem
-          asChild
-          className="cursor-pointer focus:bg-white/10 focus:text-white text-gray-300"
-        >
-          <Link href="/opensource/bookmarks" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            Bookmarks
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer focus:bg-white/10 focus:text-white text-gray-300"
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </DropdownMenuItem>
+        
         <DropdownMenuSeparator className="bg-white/10" />
         <DropdownMenuItem
           onClick={handleSignOut}
