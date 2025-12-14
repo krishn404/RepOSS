@@ -37,7 +37,14 @@ export function useBookmarks() {
 
   const [optimisticState, setOptimisticState] = useState<Record<number, boolean>>({})
 
+  // Only load local bookmarks for guest users
   useEffect(() => {
+    if (isAuthenticated) {
+      setLocalLoading(false)
+      setLocalBookmarks([])
+      return
+    }
+
     let cancelled = false
 
     async function loadLocal() {
@@ -57,54 +64,48 @@ export function useBookmarks() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isAuthenticated])
 
   const mergedBookmarks: BookmarkRepository[] = useMemo(() => {
-    const merged = new Map<number, BookmarkRepository>()
+    // For authenticated users: only use remote (Convex) bookmarks
+    if (isAuthenticated) {
+      const remoteBookmarks: any[] = remoteData?.bookmarks || []
+      return remoteBookmarks.map((rb) => {
+        const base: LocalBookmarkRepository = {
+          id: rb.id,
+          name: rb.name,
+          full_name: rb.full_name,
+          description: rb.description ?? "",
+          language: rb.language ?? "",
+          stargazers_count: rb.stargazers_count ?? 0,
+          forks_count: rb.forks_count ?? 0,
+          topics: rb.topics ?? [],
+          html_url: rb.html_url,
+          owner: {
+            login: rb.owner?.login ?? "",
+            avatar_url: rb.owner?.avatar_url ?? "",
+          },
+          savedAt: rb.savedAt ?? Date.now(),
+        }
 
-    const remoteBookmarks: any[] = remoteData?.bookmarks || []
-
-    // Remote takes precedence
-    for (const rb of remoteBookmarks) {
-      const base: LocalBookmarkRepository = {
-        id: rb.id,
-        name: rb.name,
-        full_name: rb.full_name,
-        description: rb.description ?? "",
-        language: rb.language ?? "",
-        stargazers_count: rb.stargazers_count ?? 0,
-        forks_count: rb.forks_count ?? 0,
-        topics: rb.topics ?? [],
-        html_url: rb.html_url,
-        owner: {
-          login: rb.owner?.login ?? "",
-          avatar_url: rb.owner?.avatar_url ?? "",
-        },
-        savedAt: rb.savedAt ?? Date.now(),
-      }
-
-      merged.set(base.id, {
-        ...base,
-        source: "remote",
-        upstream: rb.upstream ?? {
-          exists: true,
-          lastCheckedAt: null,
-        },
+        return {
+          ...base,
+          source: "remote" as const,
+          upstream: rb.upstream ?? {
+            exists: true,
+            lastCheckedAt: null,
+          },
+        }
       })
     }
 
-    for (const local of localBookmarks) {
-      if (!merged.has(local.id)) {
-        merged.set(local.id, {
-          ...local,
-          source: "local",
-          upstream: undefined,
-        })
-      }
-    }
-
-    return Array.from(merged.values()).sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
-  }, [localBookmarks, remoteData])
+    // For guest users: only use local (IndexedDB) bookmarks
+    return localBookmarks.map((local) => ({
+      ...local,
+      source: "local" as const,
+      upstream: undefined,
+    }))
+  }, [localBookmarks, remoteData, isAuthenticated])
 
   const isBookmarked = useCallback(
     (id: number) => {
@@ -141,7 +142,7 @@ export function useBookmarks() {
         }
 
         if (!isAuthenticated) {
-          // Guest: local IndexedDB
+          // Guest users: Store bookmarks locally in IndexedDB
           if (already) {
             await removeLocalBookmark(repo.id)
             setLocalBookmarks((prev) => prev.filter((b) => b.id !== repo.id))
@@ -152,9 +153,9 @@ export function useBookmarks() {
           return
         }
 
-        // Authenticated: Convex via API
+        // Authenticated users (Google/GitHub): Store bookmarks in Convex database
         if (already) {
-          await fetch("/api/bookmarks", {
+          const response = await fetch("/api/bookmarks", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -162,15 +163,26 @@ export function useBookmarks() {
               repositoryName: validated.full_name ?? validated.name,
             }),
           })
+          if (!response.ok) {
+            throw new Error("Failed to remove bookmark")
+          }
         } else {
-          await fetch("/api/bookmarks", {
+          const response = await fetch("/api/bookmarks", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ repository: validated }),
           })
+          if (!response.ok) {
+            throw new Error("Failed to save bookmark")
+          }
         }
 
         await mutateRemote()
+      } catch (error) {
+        console.error("Failed to toggle bookmark:", error)
+        // Revert optimistic update on error
+        setOptimisticState((prev) => ({ ...prev, [repo.id]: already }))
+        throw error
       } finally {
         // Clear optimistic entry; derived state will fall back to mergedBookmarks
         setOptimisticState((prev) => {
