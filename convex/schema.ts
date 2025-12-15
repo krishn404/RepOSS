@@ -1,6 +1,14 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
 
+const BadgeEnum = v.union(
+  v.literal("startup"),
+  v.literal("bug_bounty"),
+  v.literal("gssoc"),
+  v.literal("ai"),
+  v.literal("devtools")
+)
+
 export default defineSchema({
   // Cache for GitHub repository searches
   repositoriesCache: defineTable({
@@ -74,6 +82,33 @@ export default defineSchema({
     .index("by_period", ["period"])
     .index("by_expires", ["expiresAt"]),
 
+  // Repositories (normalized GitHub data with staff-pick state)
+  repositories: defineTable({
+    repoId: v.number(),
+    name: v.string(),
+    fullName: v.string(),
+    description: v.optional(v.string()),
+    htmlUrl: v.string(),
+    ownerLogin: v.string(),
+    ownerAvatarUrl: v.optional(v.string()),
+    language: v.optional(v.string()),
+    topics: v.optional(v.array(v.string())),
+    stars: v.number(),
+    forks: v.number(),
+    category: v.optional(v.string()),
+    createdAt: v.number(),
+    pushedAt: v.optional(v.number()),
+    nameOwnerSearch: v.string(), // lowercased name and owner for naive search
+    isStaffPicked: v.boolean(),
+    staffPickBadges: v.array(BadgeEnum),
+    staffPickNote: v.optional(v.string()),
+    staffPickedAt: v.optional(v.number()),
+  })
+    .index("by_repo_id", ["repoId"])
+    .index("by_isStaffPicked", ["isStaffPicked"])
+    .index("by_category", ["category"])
+    .index("by_name_owner_search", ["nameOwnerSearch"]),
+
   // User profiles
   users: defineTable({
     userId: v.string(), // NextAuth user ID
@@ -111,15 +146,4 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_activity_type", ["activityType"])
     .index("by_timestamp", ["timestamp"]),
-
-  // Staff picked repositories
-  staffPicks: defineTable({
-    repoId: v.number(), // GitHub repository ID
-    reason: v.string(), // Why this repo was picked
-    order: v.number(), // Display order/weight (lower = higher priority)
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_repo_id", ["repoId"])
-    .index("by_order", ["order"]),
 })

@@ -21,7 +21,11 @@ export function UserMenu() {
   const userId = session?.user?.id as string | undefined
 
   // Check if user is admin (UI check only, security enforced in backend)
-  const isAdmin = userId ? useQuery(api.users.checkIsAdmin, { userId }) : undefined
+  // Pass "skip" when userId is not yet known to keep hook order stable.
+  const isAdmin = useQuery(
+    api.users.checkIsAdmin,
+    userId ? { userId } : "skip"
+  )
 
   if (status === "loading") {
     return (
