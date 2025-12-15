@@ -107,7 +107,10 @@ export default defineSchema({
     .index("by_repo_id", ["repoId"])
     .index("by_isStaffPicked", ["isStaffPicked"])
     .index("by_category", ["category"])
-    .index("by_name_owner_search", ["nameOwnerSearch"]),
+    .index("by_name_owner_search", ["nameOwnerSearch"])
+    .index("by_staff_picked_at", ["staffPickedAt"])
+    .index("by_stars", ["stars"])
+    .index("by_created_at", ["createdAt"]),
 
   // User profiles
   users: defineTable({
