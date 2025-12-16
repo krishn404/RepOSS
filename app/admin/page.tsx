@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useSession } from "next-auth/react"
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -37,10 +37,7 @@ export default function AdminPage() {
   // @ts-ignore - NextAuth augments user
   const userId = session?.user?.id as string | undefined
 
-  const isAdmin = useQuery(
-    api.users.checkIsAdmin,
-    userId ? { userId } : "skip"
-  )
+  const isAdmin = useQuery(api.users.checkIsAdmin, userId ? { userId } : "skip")
 
   const overview = useQuery(
     api.admin.getOverview,
@@ -56,24 +53,11 @@ export default function AdminPage() {
 
   const [badgeFilter, setBadgeFilter] = useState<BadgeValue | null>(null)
   const [sort, setSort] = useState<"staffPickedAt" | "stars">("staffPickedAt")
+  const [repositories, setRepositories] = useState<GitHubRepo[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const {
-    results = [],
-    status: reposStatus,
-    loadMore,
-    isLoading,
-  } = usePaginatedQuery(
-    api.admin.listStaffPicks,
-    userId && isAdmin
-      ? {
-          userId,
-          search: debouncedSearch || undefined,
-          type: badgeFilter || undefined,
-          sort,
-        }
-      : "skip",
-    { initialNumItems: 40 }
-  )
+  // Public staff picks from Convex so we can show badges / mark which repos are picked
+  const staffPicks = useQuery(api.staffPicks.getPublicStaffPicks, {})
 
   const setStaffPick = useMutation(api.admin.setStaffPick)
 
@@ -83,32 +67,89 @@ export default function AdminPage() {
   const [modalNote, setModalNote] = useState("")
   const [modalTargetPick, setModalTargetPick] = useState<boolean>(true)
 
-  const mergedResults = useMemo(() => {
-    return results.map((repo: any) => ({
-      ...repo,
-      ...(optimistic[repo.repoId] ?? {}),
-    })) as any[]
-  }, [results, optimistic])
+  // Fetch repositories from the same API used by /opensource
+  useEffect(() => {
+    if (!userId || !isAdmin) return
 
-  const repositories = useMemo(() => {
-    return mergedResults.map((repo: any) => ({
-      id: repo.repoId,
-      name: repo.name,
-      full_name: repo.fullName,
-      description: repo.description || "",
-      language: repo.language || "",
-      stargazers_count: repo.stars ?? 0,
-      forks_count: repo.forks ?? 0,
-      topics: repo.topics || [],
-      html_url: repo.htmlUrl || `https://github.com/${repo.fullName}`,
-      owner: {
-        login: repo.ownerLogin,
-        avatar_url: repo.ownerAvatarUrl || `https://github.com/${repo.ownerLogin}.png`,
-      },
-      staffPickBadges: repo.staffPickBadges,
-      isStaffPicked: repo.isStaffPicked,
-    })) as GitHubRepo[]
-  }, [mergedResults])
+    let cancelled = false
+
+    const fetchRepos = async () => {
+      setIsLoading(true)
+      try {
+        const params = new URLSearchParams()
+        if (debouncedSearch) {
+          params.append("search", debouncedSearch)
+        }
+        params.append("language", "all")
+        params.append("minStars", "any")
+        // Map admin sort options to API sortBy
+        params.append("sortBy", sort === "stars" ? "stars" : "updated")
+
+        const res = await fetch(`/api/opensource?${params.toString()}`)
+        if (!res.ok) {
+          console.error("Failed to fetch repositories for admin:", await res.text())
+          if (!cancelled) setRepositories([])
+          return
+        }
+
+        const data = await res.json()
+        if (cancelled) return
+
+        const staffPickMap = new Map<
+          number,
+          {
+            staffPickBadges?: string[]
+          }
+        >()
+
+        ;(staffPicks || []).forEach((pick: any) => {
+          staffPickMap.set(pick.repoId, {
+            staffPickBadges: pick.staffPickBadges || [],
+          })
+        })
+
+        const mapped: GitHubRepo[] = (data.repositories || []).map((repo: Repository) => {
+          const pick = staffPickMap.get(repo.id)
+
+          return {
+            ...repo,
+            staffPickBadges: pick?.staffPickBadges ?? [],
+            isStaffPicked: Boolean(pick),
+            repoId: repo.id,
+          }
+        })
+
+        setRepositories(mapped)
+      } catch (error) {
+        console.error("Error fetching repositories for admin:", error)
+        if (!cancelled) setRepositories([])
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    fetchRepos()
+
+    return () => {
+      cancelled = true
+    }
+  }, [debouncedSearch, sort, userId, isAdmin, staffPicks])
+
+  // Apply optimistic updates on top of fetched repositories
+  const optimisticRepositories = useMemo(() => {
+    return repositories.map((repo) => ({
+      ...repo,
+      ...(optimistic[repo.id] ?? {}),
+    }))
+  }, [repositories, optimistic])
+
+  // Client-side filter by badge type (Type)
+  const filteredRepositories = useMemo(() => {
+    if (!badgeFilter) return optimisticRepositories
+    return optimisticRepositories.filter((repo) =>
+      (repo.staffPickBadges ?? []).includes(badgeFilter)
+    )
+  }, [optimisticRepositories, badgeFilter])
 
   const handleOpenModal = (repo: GitHubRepo, nextPicked: boolean) => {
     setModalRepo(repo)
@@ -291,7 +332,7 @@ export default function AdminPage() {
                 </Button>
               </div>
             </CardTitle>
-            <CardDescription className="flex flex-wrap items-center gap-3">
+            <CardContent className="flex flex-wrap items-center gap-3 p-0 pt-2">
               <div className="relative flex-1 min-w-[260px]">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
@@ -319,13 +360,13 @@ export default function AdminPage() {
                   Clear badges
                 </Button>
               </div>
-            </CardDescription>
+            </CardContent>
           </CardHeader>
 
           <CardContent className="space-y-4">
             <AdminRepoTable
-              repositories={repositories}
-              loading={isLoading && repositories.length === 0}
+              repositories={filteredRepositories}
+              loading={isLoading && filteredRepositories.length === 0}
               badgeOptions={BADGE_OPTIONS}
               onStaffPickClick={(repo) => {
                 handleOpenModal(repo, !repo.isStaffPicked)
@@ -333,18 +374,8 @@ export default function AdminPage() {
             />
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                Showing {repositories.length} repositories
+                Showing {filteredRepositories.length} repositories
               </div>
-              <Button
-                variant="outline"
-                disabled={!loadMore || reposStatus === "Exhausted" || isLoading}
-                onClick={() => loadMore && loadMore(30)}
-              >
-                {isLoading || reposStatus === "CanLoadMore" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Load more
-              </Button>
             </div>
           </CardContent>
         </Card>
