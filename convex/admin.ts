@@ -92,7 +92,6 @@ export const listStaffPicks = query({
               .gte("nameOwnerSearch", searchTerm)
               .lt("nameOwnerSearch", `${searchTerm}\uffff`)
           )
-          .filter((q) => q.eq(q.field("isStaffPicked"), true))
           .paginate({
             ...args.paginationOpts,
             numItems: clampPageSize(args.paginationOpts.numItems),
@@ -121,6 +120,77 @@ export const listStaffPicks = query({
     }
 
     return { ...page, page: filtered }
+  },
+})
+
+/* -------------------------
+   LIST ALL REPOSITORIES (ADMIN)
+   - Uses same base table as clients
+   - Badge filter is additive; includes staff picks too
+-------------------------- */
+
+export const listRepositories = query({
+  args: {
+    userId: v.string(),
+    search: v.optional(v.string()),
+    type: v.optional(BadgeEnum),
+    sort: v.optional(v.union(v.literal("staffPickedAt"), v.literal("stars"))),
+    paginationOpts: paginationOptsValidator,
+  },
+  async handler(ctx, args) {
+    const emptyPage = { page: [], isDone: true, continueCursor: null as any }
+
+    try {
+      // Guard inputs and auth first; never throw for missing/unauthorized
+      if (!args.userId || !args.paginationOpts) {
+        return emptyPage
+      }
+
+      const admin = await getAdminUser(ctx, args.userId)
+      if (!admin) {
+        return emptyPage
+      }
+
+      const searchTerm = args.search?.trim().toLowerCase()
+
+      // Base query: search uses nameOwnerSearch index; otherwise use primary index with default order
+      const page = searchTerm
+        ? await ctx.db
+            .query("repositories")
+            .withIndex("by_name_owner_search", (q) =>
+              q
+                .gte("nameOwnerSearch", searchTerm)
+                .lt("nameOwnerSearch", `${searchTerm}\uffff`)
+            )
+            .paginate({
+              ...args.paginationOpts,
+              numItems: clampPageSize(args.paginationOpts.numItems),
+            })
+        : await ctx.db
+            .query("repositories")
+            .paginate({
+              ...args.paginationOpts,
+              numItems: clampPageSize(args.paginationOpts.numItems),
+            })
+
+      let filtered = page.page
+
+      if (args.type) {
+        filtered = filtered.filter((repo) =>
+          (repo.staffPickBadges ?? []).includes(args.type!)
+        )
+      }
+
+      if (args.sort === "stars") {
+        filtered = [...filtered].sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0))
+      } else if (args.sort === "staffPickedAt") {
+        filtered = [...filtered].sort((a, b) => (b.staffPickedAt ?? 0) - (a.staffPickedAt ?? 0))
+      }
+
+      return { ...page, page: filtered }
+    } catch (error) {
+      return emptyPage
+    }
   },
 })
 

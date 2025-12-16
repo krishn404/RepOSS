@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useSession } from "next-auth/react"
-import { useMutation, useQuery } from "convex/react"
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,12 @@ const BADGE_OPTIONS = [
   { value: "devtools", label: "DevTools" },
 ] as const
 
+const BADGE_VALUES = BADGE_OPTIONS.map((b) => b.value)
+
 type BadgeValue = (typeof BADGE_OPTIONS)[number]["value"]
+
+const isBadgeValue = (b: unknown): b is BadgeValue =>
+  typeof b === "string" && (BADGE_VALUES as readonly string[]).includes(b)
 
 type GitHubRepo = Repository & {
   staffPickBadges?: string[]
@@ -38,11 +43,7 @@ export default function AdminPage() {
   const userId = session?.user?.id as string | undefined
 
   const isAdmin = useQuery(api.users.checkIsAdmin, userId ? { userId } : "skip")
-
-  const overview = useQuery(
-    api.admin.getOverview,
-    userId && isAdmin ? { userId } : "skip"
-  )
+  const overview = useQuery(api.admin.getOverview, userId && isAdmin ? { userId } : "skip")
 
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
@@ -53,11 +54,24 @@ export default function AdminPage() {
 
   const [badgeFilter, setBadgeFilter] = useState<BadgeValue | null>(null)
   const [sort, setSort] = useState<"staffPickedAt" | "stars">("staffPickedAt")
-  const [repositories, setRepositories] = useState<GitHubRepo[]>([])
-  const [isLoading, setIsLoading] = useState(false)
 
-  // Public staff picks from Convex so we can show badges / mark which repos are picked
-  const staffPicks = useQuery(api.staffPicks.getPublicStaffPicks, {})
+  const {
+    results = [],
+    status: reposStatus,
+    loadMore,
+    isLoading,
+  } = usePaginatedQuery(
+    api.admin.listRepositories,
+    userId && isAdmin
+      ? {
+          userId,
+          search: debouncedSearch || undefined,
+          type: badgeFilter || undefined,
+          sort,
+        }
+      : "skip",
+    { initialNumItems: 40 }
+  )
 
   const setStaffPick = useMutation(api.admin.setStaffPick)
 
@@ -67,89 +81,63 @@ export default function AdminPage() {
   const [modalNote, setModalNote] = useState("")
   const [modalTargetPick, setModalTargetPick] = useState<boolean>(true)
 
-  // Fetch repositories from the same API used by /opensource
-  useEffect(() => {
-    if (!userId || !isAdmin) return
-
-    let cancelled = false
-
-    const fetchRepos = async () => {
-      setIsLoading(true)
-      try {
-        const params = new URLSearchParams()
-        if (debouncedSearch) {
-          params.append("search", debouncedSearch)
-        }
-        params.append("language", "all")
-        params.append("minStars", "any")
-        // Map admin sort options to API sortBy
-        params.append("sortBy", sort === "stars" ? "stars" : "updated")
-
-        const res = await fetch(`/api/opensource?${params.toString()}`)
-        if (!res.ok) {
-          console.error("Failed to fetch repositories for admin:", await res.text())
-          if (!cancelled) setRepositories([])
-          return
-        }
-
-        const data = await res.json()
-        if (cancelled) return
-
-        const staffPickMap = new Map<
-          number,
-          {
-            staffPickBadges?: string[]
-          }
-        >()
-
-        ;(staffPicks || []).forEach((pick: any) => {
-          staffPickMap.set(pick.repoId, {
-            staffPickBadges: pick.staffPickBadges || [],
-          })
-        })
-
-        const mapped: GitHubRepo[] = (data.repositories || []).map((repo: Repository) => {
-          const pick = staffPickMap.get(repo.id)
-
-          return {
-            ...repo,
-            staffPickBadges: pick?.staffPickBadges ?? [],
-            isStaffPicked: Boolean(pick),
-            repoId: repo.id,
-          }
-        })
-
-        setRepositories(mapped)
-      } catch (error) {
-        console.error("Error fetching repositories for admin:", error)
-        if (!cancelled) setRepositories([])
-      } finally {
-        if (!cancelled) setIsLoading(false)
-      }
-    }
-
-    fetchRepos()
-
-    return () => {
-      cancelled = true
-    }
-  }, [debouncedSearch, sort, userId, isAdmin, staffPicks])
-
-  // Apply optimistic updates on top of fetched repositories
-  const optimisticRepositories = useMemo(() => {
-    return repositories.map((repo) => ({
+  const mergedResults = useMemo(() => {
+    return results.map((repo: any) => ({
       ...repo,
-      ...(optimistic[repo.id] ?? {}),
-    }))
-  }, [repositories, optimistic])
+      ...(optimistic[repo.repoId] ?? {}),
+    })) as any[]
+  }, [results, optimistic])
 
-  // Client-side filter by badge type (Type)
+  const repositories = useMemo(() => {
+    return mergedResults.map((repo: any) => ({
+      id: repo.repoId,
+      name: repo.name,
+      full_name: repo.fullName,
+      description: repo.description || "",
+      language: repo.language || "",
+      stargazers_count: repo.stars ?? 0,
+      forks_count: repo.forks ?? 0,
+      topics: repo.topics || [],
+      html_url: repo.htmlUrl || `https://github.com/${repo.fullName}`,
+      owner: {
+        login: repo.ownerLogin,
+        avatar_url: repo.ownerAvatarUrl || `https://github.com/${repo.ownerLogin}.png`,
+      },
+      staffPickBadges: repo.staffPickBadges,
+      isStaffPicked: repo.isStaffPicked,
+    })) as GitHubRepo[]
+  }, [mergedResults])
+
+  // Client-side filter by badge type (Type) — additive, does not exclude staff picks
   const filteredRepositories = useMemo(() => {
-    if (!badgeFilter) return optimisticRepositories
-    return optimisticRepositories.filter((repo) =>
-      (repo.staffPickBadges ?? []).includes(badgeFilter)
-    )
-  }, [optimisticRepositories, badgeFilter])
+    if (!badgeFilter) return repositories
+    return repositories.filter((repo) => (repo.staffPickBadges ?? []).includes(badgeFilter))
+  }, [repositories, badgeFilter])
+
+  // Badge counts and staff pick count derived from the same dataset (authoritative repositories table via Convex)
+  const { badgeCounts, staffPickCount } = useMemo(() => {
+    const counts: Record<BadgeValue, number> = {
+      startup: 0,
+      bug_bounty: 0,
+      gssoc: 0,
+      ai: 0,
+      devtools: 0,
+    }
+    let picks = 0
+
+    repositories.forEach((repo) => {
+      if (repo.isStaffPicked) {
+        picks += 1
+        ;(repo.staffPickBadges || []).forEach((badge) => {
+          if (isBadgeValue(badge)) {
+            counts[badge] = (counts[badge] ?? 0) + 1
+          }
+        })
+      }
+    })
+
+    return { badgeCounts: counts, staffPickCount: picks }
+  }, [repositories])
 
   const handleOpenModal = (repo: GitHubRepo, nextPicked: boolean) => {
     setModalRepo(repo)
@@ -198,11 +186,8 @@ export default function AdminPage() {
             }
           : undefined,
       })
-      // Refresh staff picks to get updated data
-      // The useEffect will re-run and merge the new data
     } catch (error) {
       console.error(error)
-      // revert
       setOptimistic((prev) => {
         const next = { ...prev }
         delete next[repoId]
@@ -293,7 +278,7 @@ export default function AdminPage() {
               <CardDescription>Staff picks</CardDescription>
               <CardTitle className="flex items-center gap-2 text-3xl">
                 <ShieldCheck className="h-5 w-5 text-blue-300" />
-                {overview ? overview.staffPickCount : <Loader2 className="h-5 w-5 animate-spin" />}
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : staffPickCount}
               </CardTitle>
             </CardHeader>
           </Card>
@@ -303,7 +288,7 @@ export default function AdminPage() {
               <CardContent className="flex flex-wrap gap-2 p-0 pt-2">
                 {BADGE_OPTIONS.map((badge) => (
                   <Badge key={badge.value} variant="outline" className="border-white/20 text-xs text-white">
-                    {badge.label}: {overview?.badgeCounts?.[badge.value] ?? 0}
+                    {badge.label}: {badgeCounts[badge.value as BadgeValue] ?? 0}
                   </Badge>
                 ))}
               </CardContent>
