@@ -53,13 +53,18 @@ export default function OpenSourcePage() {
   }
 
   useEffect(() => {
-    if (activeNav === "staffPicked") {
-      fetchStaffPickedRepositories()
-    } else {
+    if (activeNav !== "staffPicked") {
       fetchRepositories()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, activeNav, trendingPeriod, selectedLanguages, staffPicks])
+  }, [filters, activeNav, trendingPeriod, selectedLanguages])
+
+  useEffect(() => {
+    if (activeNav === "staffPicked") {
+      fetchStaffPickedRepositories()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeNav, staffPicks])
 
   const fetchRepositories = async () => {
     setLoading(true)
@@ -130,60 +135,11 @@ export default function OpenSourcePage() {
     }
   }
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "k"
-    }
-    return num.toString()
-  }
-
-  const getLanguageColor = (language: string) => {
-    const colors: Record<string, string> = {
-      Go: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-      TypeScript: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      JavaScript: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-      Python: "bg-green-500/20 text-green-400 border-green-500/30",
-      Java: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-      "C++": "bg-purple-500/20 text-purple-400 border-purple-500/30",
-      Rust: "bg-red-500/20 text-red-400 border-red-500/30",
-      PHP: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
-    }
-    return colors[language] || "bg-gray-500/20 text-gray-400 border-gray-500/30"
-  }
-
-  const getPopularityBadge = (stars: number, index: number) => {
-    if (index < 3) {
-      return (
-        <div className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-medium px-2 py-1">
-          Legendary
-        </div>
-      )
-    }
-    return (
-      <div className="bg-purple-500/20 text-purple-400 border border-purple-500/30 font-medium px-2 py-1">Famous</div>
-    )
-  }
-
-  const renderRankBadge = (index: number) => {
-    if (index > 2) return null
-    const labels = ["1st", "2nd", "3rd"]
-    const styles = [
-      "bg-[hsl(var(--muted)/0.2)] text-[hsl(var(--foreground))] border border-[hsl(var(--border)/0.4)]",
-      "bg-[hsl(var(--muted)/0.18)] text-[hsl(var(--foreground))] border border-[hsl(var(--border)/0.35)]",
-      "bg-[hsl(var(--muted)/0.16)] text-[hsl(var(--foreground))] border border-[hsl(var(--border)/0.3)]",
-    ]
-    return <div className={`${styles[index]} font-semibold px-2 py-0.5`}>{labels[index]}</div>
-  }
-
   const navItems = [
     { id: "home", label: "Home", icon: null },
     { id: "trending", label: "Trending", icon: null },
     { id: "staffPicked", label: "Staff Picked", icon: null },
   ] as const
-
-  const handleSaveRepository = async (repo: Repo) => {
-    console.log("Save repository feature requires authentication in production:", repo.name)
-  }
 
   return (
     <div className="relative min-h-screen w-full text-white" style={{ backgroundColor: "#121212" }}>

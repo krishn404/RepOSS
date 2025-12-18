@@ -1,13 +1,8 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
 
-const BadgeEnum = v.union(
-  v.literal("startup"),
-  v.literal("bug_bounty"),
-  v.literal("gssoc"),
-  v.literal("ai"),
-  v.literal("devtools")
-)
+// Allow arbitrary staff pick "Type" labels, including custom ones
+const BadgeEnum = v.string()
 
 export default defineSchema({
   repositoriesCache: defineTable({

@@ -3,13 +3,8 @@ import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
 import { QueryCtx, MutationCtx } from "./_generated/server"
 
-const BadgeEnum = v.union(
-  v.literal("startup"),
-  v.literal("bug_bounty"),
-  v.literal("gssoc"),
-  v.literal("ai"),
-  v.literal("devtools")
-)
+// Allow arbitrary staff pick "Type" labels, including custom ones
+const BadgeEnum = v.string()
 
 /* -------------------------
    SAFE ADMIN CHECK HELPERS
@@ -291,11 +286,12 @@ export const getOverview = query({
   async handler(ctx, args) {
     const admin = await getAdminUser(ctx, args.userId)
     if (!admin) {
-      return { totalRepositories: 0, staffPickCount: 0, badgeCounts: {} }
+      return { totalRepositories: 0, staffPickCount: 0, badgeCounts: {}, otherCount: 0 }
     }
 
     let staffPickCount = 0
     const badgeCounts: Record<string, number> = {}
+    let otherCount = 0
 
     const picks = await ctx.db
       .query("repositories")
@@ -304,9 +300,18 @@ export const getOverview = query({
 
     staffPickCount = picks.length
 
+    const builtinBadges = new Set(["startup", "bug_bounty", "gssoc", "ai", "devtools"])
+
     for (const repo of picks) {
+      const first = repo.staffPickBadges[0]
+      if (typeof first === "string" && !builtinBadges.has(first)) {
+        // Treat any non-built-in label as "Other" for stats
+        otherCount += 1
+      }
       for (const badge of repo.staffPickBadges) {
-        badgeCounts[badge] = (badgeCounts[badge] ?? 0) + 1
+        if (typeof badge === "string" && builtinBadges.has(badge)) {
+          badgeCounts[badge] = (badgeCounts[badge] ?? 0) + 1
+        }
       }
     }
 
@@ -314,6 +319,7 @@ export const getOverview = query({
       totalRepositories: 0, // intentionally unused
       staffPickCount,
       badgeCounts,
+      otherCount,
     }
   },
 })

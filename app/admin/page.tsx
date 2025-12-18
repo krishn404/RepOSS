@@ -25,8 +25,9 @@ const BADGE_OPTIONS = [
 ] as const
 
 const BADGE_VALUES = BADGE_OPTIONS.map((b) => b.value)
+const OTHER_FILTER = "__other__"
 
-type BadgeValue = (typeof BADGE_OPTIONS)[number]["value"]
+type BadgeValue = string
 
 const isBadgeValue = (b: unknown): b is BadgeValue =>
   typeof b === "string" && (BADGE_VALUES as readonly string[]).includes(b)
@@ -67,6 +68,8 @@ export default function AdminPage() {
   const [modalBadges, setModalBadges] = useState<BadgeValue | null>(null)
   const [modalNote, setModalNote] = useState("")
   const [modalTargetPick, setModalTargetPick] = useState<boolean>(true)
+  const [isCustomBadge, setIsCustomBadge] = useState(false)
+  const [customBadgeLabel, setCustomBadgeLabel] = useState("")
 
   // Fetch repositories via the shared /api/opensource endpoint (same pipeline as /opensource page)
   useEffect(() => {
@@ -80,9 +83,13 @@ export default function AdminPage() {
         // fetch all staff picks from Convex, then hydrate each via /api/repositories/[id]
         if (badgeFilter) {
           const allPicks = (staffPicks || []) as any[]
-          const filteredPicks = allPicks.filter((pick) =>
-            (pick.staffPickBadges || []).includes(badgeFilter)
-          )
+          const filteredPicks =
+            badgeFilter === OTHER_FILTER
+              ? allPicks.filter((pick) => {
+                  const first = (pick.staffPickBadges || [])[0]
+                  return typeof first === "string" && !BADGE_VALUES.includes(first)
+                })
+              : allPicks.filter((pick) => (pick.staffPickBadges || []).includes(badgeFilter))
 
           if (filteredPicks.length === 0) {
             setRepositories([])
@@ -204,24 +211,58 @@ export default function AdminPage() {
   // Client-side filter by badge type (Type) — additive, does not exclude staff picks
   const filteredRepositories = useMemo(() => {
     if (!badgeFilter) return repositories
+    if (badgeFilter === OTHER_FILTER) {
+      return repositories.filter((repo) => {
+        const first = (repo.staffPickBadges ?? [])[0]
+        return typeof first === "string" && !BADGE_VALUES.includes(first)
+      })
+    }
     return repositories.filter((repo) => (repo.staffPickBadges ?? []).includes(badgeFilter))
   }, [repositories, badgeFilter])
 
   const handleOpenModal = (repo: GitHubRepo, nextPicked: boolean) => {
     setModalRepo(repo)
     setModalTargetPick(nextPicked)
-    setModalBadges((repo.staffPickBadges?.[0] as BadgeValue | undefined) ?? null)
+    const firstBadge = repo.staffPickBadges?.[0]
+    if (firstBadge && isBadgeValue(firstBadge)) {
+      setModalBadges(firstBadge)
+      setIsCustomBadge(false)
+      setCustomBadgeLabel("")
+    } else if (typeof firstBadge === "string" && firstBadge.trim()) {
+      setModalBadges(null)
+      setIsCustomBadge(true)
+      setCustomBadgeLabel(firstBadge)
+    } else {
+      setModalBadges(null)
+      setIsCustomBadge(false)
+      setCustomBadgeLabel("")
+    }
     setModalNote("")
   }
 
   const handleConfirmStaffPick = async () => {
     if (!modalRepo || !userId) return
     const repoId = modalRepo.id
-    if (modalTargetPick && !modalBadges) {
-      alert("Please select a Type before marking as staff pick.")
-      return
+    let badgeToSave: string | null = null
+
+    if (modalTargetPick) {
+      if (isCustomBadge) {
+        const trimmed = customBadgeLabel.trim()
+        if (!trimmed) {
+          alert("Please enter a custom Type before marking as staff pick.")
+          return
+        }
+        badgeToSave = trimmed
+      } else {
+        if (!modalBadges) {
+          alert("Please select a Type before marking as staff pick.")
+          return
+        }
+        badgeToSave = modalBadges
+      }
     }
-    const badges: BadgeValue[] = modalTargetPick && modalBadges ? [modalBadges] : []
+
+    const badges: string[] = modalTargetPick && badgeToSave ? [badgeToSave] : []
 
     setOptimistic((prev) => ({
       ...prev,
@@ -359,6 +400,9 @@ export default function AdminPage() {
                     {badge.label}: {overview?.badgeCounts?.[badge.value] ?? 0}
                   </Badge>
                 ))}
+                <Badge variant="outline" className="border-white/20 text-xs text-white">
+                  Other: {overview?.otherCount ?? 0}
+                </Badge>
               </CardContent>
             </CardHeader>
           </Card>
@@ -409,6 +453,13 @@ export default function AdminPage() {
                     </Button>
                   )
                 })}
+                <Button
+                  size="sm"
+                  variant={badgeFilter === OTHER_FILTER ? "default" : "outline"}
+                  onClick={() => setBadgeFilter(badgeFilter === OTHER_FILTER ? null : OTHER_FILTER)}
+                >
+                  Other
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => setBadgeFilter(null)}>
                   Clear badges
                 </Button>
@@ -455,12 +506,36 @@ export default function AdminPage() {
                       key={badge.value}
                       variant={checked ? "default" : "outline"}
                       className="justify-start"
-                      onClick={() => setModalBadges(badge.value)}
+                      onClick={() => {
+                        setIsCustomBadge(false)
+                        setCustomBadgeLabel("")
+                        setModalBadges(badge.value)
+                      }}
                     >
                       {badge.label}
                     </Button>
                   )
                 })}
+              </div>
+              <div className="space-y-2">
+                <Button
+                  variant={isCustomBadge ? "default" : "outline"}
+                  className="justify-start w-full"
+                  onClick={() => {
+                    setIsCustomBadge(true)
+                    setModalBadges(null)
+                  }}
+                >
+                  Other
+                </Button>
+                {isCustomBadge && (
+                  <Input
+                    value={customBadgeLabel}
+                    onChange={(e) => setCustomBadgeLabel(e.target.value)}
+                    placeholder="Enter custom Type (e.g. UI LIBRARY)"
+                    className="bg-black/40 border-white/10 text-white"
+                  />
+                )}
               </div>
               <div>
                 <p className="mb-1 text-sm text-gray-400">Note (optional)</p>
