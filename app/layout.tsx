@@ -13,7 +13,9 @@ import Script from "next/script"
 const inter = Inter({ subsets: ["latin"] })
 
 const siteUrl = "https://reposs.xyz"
-const ogImage = `${siteUrl}/og-img.jpg`
+// Use the shared OG image in /public so all social platforms (Twitter, WhatsApp, Discord, LinkedIn, etc.)
+// get the same preview when a reposs link is shared.
+const ogImage = `${siteUrl}/og-image.jpg`
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

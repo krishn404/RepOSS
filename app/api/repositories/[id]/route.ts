@@ -3,10 +3,11 @@ import { createOctokit } from "@/lib/github"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const repoId = parseInt(params.id, 10)
+    const { id } = await params
+    const repoId = parseInt(id, 10)
     if (isNaN(repoId)) {
       return NextResponse.json({ error: "Invalid repository ID" }, { status: 400 })
     }
