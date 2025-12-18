@@ -14,8 +14,10 @@ const inter = Inter({ subsets: ["latin"] })
 
 const siteUrl = "https://reposs.xyz"
 // Use the shared OG image in /public so all social platforms (Twitter, WhatsApp, Discord, LinkedIn, etc.)
-// get the same preview when a reposs link is shared.
-const ogImage = `${siteUrl}/og-image.jpg`
+// get the same preview when a reposs link is shared. The query param is a build-time
+// version marker to avoid caching mismatches without changing per-request.
+const OG_IMAGE_VERSION = "v1"
+const ogImage = `${siteUrl}/og-image.jpg?${OG_IMAGE_VERSION}`
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -59,6 +61,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImage,
+        secureUrl: ogImage,
+        type: "image/jpeg",
         width: 1200,
         height: 630,
         alt: "reposs - Discover Open Source",
