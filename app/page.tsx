@@ -4,6 +4,8 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import FAQSection from "@/components/landing/faq-section"
 import CTASection from "@/components/landing/cta-section"
 import FooterSection from "@/components/landing/footer-section"
@@ -52,11 +54,21 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
 }
 
 export default function LandingPage() {
+  const { status } = useSession()
+  const router = useRouter()
+
   const [activeCard, setActiveCard] = useState(0)
   const [progress, setProgress] = useState(0)
   const mountedRef = useRef(true)
   const [repositories, setRepositories] = useState<Repo[]>([])
   const [loadingRepositories, setLoadingRepositories] = useState(true)
+
+  // If user is already authenticated, send them straight to /opensource
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/opensource")
+    }
+  }, [status, router])
 
   useEffect(() => {
     const fetchRepositories = async () => {
@@ -64,7 +76,8 @@ export default function LandingPage() {
       try {
         const params = new URLSearchParams()
         params.append("trending", "1")
-        params.append("trendingPeriod", "day")
+        // Show trending repositories over the last year on the landing page
+        params.append("trendingPeriod", "year")
         params.append("sortBy", "stars")
 
         const response = await fetch(`/api/opensource?${params.toString()}`)
