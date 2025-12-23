@@ -103,10 +103,16 @@ export function RepoTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className={isLanding ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]" : "border-b border-white/10"} style={!isLanding ? { backgroundColor: "rgba(255, 255, 255, 0.05)" } : undefined}>
+            <tr
+              className={
+                (isLanding ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a0a]" : "border-b border-white/10") +
+                " align-middle"
+              }
+              style={!isLanding ? { backgroundColor: "rgba(255, 255, 255, 0.05)" } : undefined}
+            >
               <th
                 className={
-                  "text-left p-3 md:p-4 font-medium text-xs md:text-sm " +
+                  "text-left px-4 py-3 font-medium text-xs md:text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -114,7 +120,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "text-left p-3 md:p-4 font-medium text-xs md:text-sm " +
+                  "text-left px-4 py-3 font-medium text-xs md:text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -122,7 +128,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "hidden lg:table-cell text-left p-4 font-medium text-sm " +
+                  "hidden lg:table-cell text-left px-4 py-3 font-medium text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -130,7 +136,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "text-right p-3 md:p-4 font-medium text-xs md:text-sm " +
+                  "text-right px-4 py-3 font-medium text-xs md:text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -138,7 +144,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "hidden sm:table-cell text-right p-4 font-medium text-sm " +
+                  "hidden sm:table-cell text-right px-4 py-3 font-medium text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -146,7 +152,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "hidden xl:table-cell text-left p-4 font-medium text-sm " +
+                  "hidden xl:table-cell text-left px-4 py-3 font-medium text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -154,7 +160,7 @@ export function RepoTable({
               </th>
               <th
                 className={
-                  "w-10 text-right p-3 md:p-4 font-medium text-xs md:text-sm " +
+                  "w-10 text-right px-4 py-3 font-medium text-xs md:text-sm " +
                   (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
                 }
               >
@@ -202,22 +208,22 @@ export function RepoTable({
                     key={repo.id}
                     className={
                       isLanding
-                        ? "border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.02)] transition-all duration-200"
-                        : "border-b border-white/5 hover:bg-white/5 transition-all duration-200"
+                        ? "border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.02)] transition-all duration-200 align-middle"
+                        : "border-b border-white/5 hover:bg-white/5 transition-all duration-200 align-middle"
                     }
                   >
-                    <td className="p-3 md:p-4 relative">
+                    <td className="px-4 py-3 md:py-4 relative align-middle">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <a
                             href={repo.html_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center space-x-3 group cursor-pointer"
+                            className="flex items-center gap-3 sm:gap-4 group cursor-pointer"
                           >
                             <Avatar
                               className={
-                                "w-8 h-8 ring-1 transition-all duration-200 group-hover:ring-2 group-hover:scale-110 " +
+                                "w-9 h-9 ring-1 transition-all duration-200 group-hover:ring-2 group-hover:scale-[1.05] " +
                                 (isLanding ? "ring-[rgba(255,255,255,0.2)] group-hover:ring-[#a0a0a0]" : "ring-white/10 group-hover:ring-primary/40")
                               }
                             >
@@ -239,7 +245,7 @@ export function RepoTable({
                                 {repo.owner.login.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
+                            <div className="flex flex-col gap-1">
                               <div
                                 className={
                                   "font-medium transition-colors duration-200 " +
@@ -250,9 +256,10 @@ export function RepoTable({
                               </div>
                               <div
                                 className={
-                                  "text-sm " + (isLanding ? "text-[#a0a0a0]" : "text-gray-500")
+                                  "inline-flex items-center gap-2 text-[13px] " + (isLanding ? "text-[#a0a0a0]" : "text-gray-500")
                                 }
                               >
+                                <span className="h-2 w-2 rounded-full bg-white/15" />
                                 {repo.owner.login}
                               </div>
                             </div>
@@ -293,11 +300,16 @@ export function RepoTable({
                         ) : null}
                       </Tooltip>
                     </td>
-                    <td className="p-3 md:p-4">
-                      {showRank ? <RankBadge index={index} /> : getLanguageBadge(repo.language)}
+                    <td className="px-4 py-3 md:py-4 align-middle">
+                      <div className="inline-flex items-center gap-2">
+                        {showRank ? <RankBadge index={index} /> : getLanguageBadge(repo.language)}
+                        <span className="hidden sm:inline-block h-6 px-2 rounded-full border border-white/10 bg-white/5 text-[11px] text-[#cfd0d3]">
+                          Stable
+                        </span>
+                      </div>
                     </td>
-                    <td className="hidden lg:table-cell p-4">
-                      <div className="flex flex-wrap gap-1.5">
+                    <td className="hidden lg:table-cell px-4 py-3 md:py-4 align-middle">
+                      <div className="flex flex-wrap gap-1.5 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2">
                         {repo.topics?.slice(0, 3).map((topic) => (
                           <Badge
                             key={topic}
@@ -313,7 +325,7 @@ export function RepoTable({
                         ))}
                       </div>
                     </td>
-                    <td className="p-3 md:p-4 text-right">
+                    <td className="px-4 py-3 md:py-4 text-right align-middle">
                       <span
                         className={
                           "font-medium " + (isLanding ? "text-[#d9d9d9]" : "text-white")
@@ -322,7 +334,7 @@ export function RepoTable({
                         {formatNumber(repo.stargazers_count)}
                       </span>
                     </td>
-                    <td className="hidden sm:table-cell p-4 text-right">
+                    <td className="hidden sm:table-cell px-4 py-3 md:py-4 text-right align-middle">
                       <span
                         className={
                           "font-medium " + (isLanding ? "text-[#a0a0a0]" : "text-gray-400")
@@ -331,7 +343,7 @@ export function RepoTable({
                         {formatNumber(repo.forks_count)}
                       </span>
                     </td>
-                    <td className="hidden xl:table-cell p-4">
+                    <td className="hidden xl:table-cell px-4 py-3 md:py-4 align-middle">
                       {showType ? (
                         repo.staffPickBadges?.[0] ? (
                           <Badge className="text-xs font-medium bg-blue-500/15 text-blue-200 border border-blue-500/30">
@@ -344,7 +356,7 @@ export function RepoTable({
                         <PopularityBadge stars={repo.stargazers_count} index={index} />
                       )}
                     </td>
-                    <td className="p-3 md:p-4 text-right">
+                    <td className="px-4 py-3 md:py-4 text-right align-middle">
                       <button
                         type="button"
                         aria-label={isBookmarked(repo.id) ? "Remove bookmark" : "Save bookmark"}

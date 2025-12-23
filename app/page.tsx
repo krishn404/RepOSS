@@ -53,6 +53,59 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
   )
 }
 
+function FeatureTile({
+  title,
+  description,
+  badge,
+  accent,
+  className = "",
+  children
+}: {
+  title: string
+  description: string
+  badge?: string
+  accent?: string
+  className?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <motion.div
+      whileHover={{ y: -4, scale: 1.005 }}
+      transition={{ type: "spring", stiffness: 220, damping: 24 }}
+      className={`relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-[#0b0b0d] via-[#0b0b0e] to-[#070708] shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-[6px] ${className}`}
+    >
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(111,214,255,0.08),transparent_32%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_86%_78%,rgba(255,214,102,0.06),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.04),transparent_28%,transparent)]" />
+      </div>
+      <div className="relative flex flex-col gap-4 sm:gap-5 p-5 sm:p-6 lg:p-7">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {badge ? (
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-[#cfd0d3] tracking-tight">
+                {badge}
+              </span>
+            ) : null}
+            <p className="text-[18px] sm:text-[19px] lg:text-[20px] font-semibold text-[#f5f5f5] tracking-tight leading-tight">
+              {title}
+            </p>
+          </div>
+          {accent ? (
+            <span className="text-[11px] font-medium text-[#8ddcff] tracking-wide whitespace-nowrap">
+              {accent}
+            </span>
+          ) : null}
+        </div>
+        <p className="text-sm sm:text-[15px] text-[#a8a8b3] leading-relaxed max-w-[720px]">
+          {description}
+        </p>
+        {children}
+      </div>
+    </motion.div>
+  )
+}
+
 export default function LandingPage() {
   const { status } = useSession()
   const router = useRouter()
@@ -243,7 +296,7 @@ export default function LandingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
                 className="w-full max-w-[600px] flex flex-col justify-center items-center gap-6 sm:gap-8 md:gap-10 lg:gap-12 relative z-10 mt-6 sm:mt-8 md:mt-10 lg:mt-12"
               >
                 <div className="flex justify-start items-center gap-4">
@@ -263,7 +316,10 @@ export default function LandingPage() {
 
 
               <motion.div
-                {...scrollFadeIn}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-15%" }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
                 className="w-full pt-2 sm:pt-4 pb-6 sm:pb-8 md:pb-10 px-2 sm:px-4 md:px-6 lg:px-11 flex flex-col justify-center items-center gap-2 relative z-5 my-8 sm:my-12 md:my-16 lg:my-16 mb-0 lg:pb-0"
               >
 
@@ -271,7 +327,7 @@ export default function LandingPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
                   className="relative w-full bg-[#303030] shadow-[0px_0px_0px_0.9px_rgba(255,255,255,0.1)] overflow-hidden rounded-[6px] sm:rounded-[8px] lg:rounded-[9px]"
                 >
                   <HomeSection
@@ -330,176 +386,204 @@ export default function LandingPage() {
 
               </motion.div>
             </div>
-            <div className="self-stretch border-t border-[rgba(255,255,255,0.1)] border-b border-[rgba(255,255,255,0.1)] flex justify-center items-start">
-              <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                {/* Left decorative pattern - Reduced elements */}
-                <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                  {Array.from({ length: 20 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(255,255,255,0.1)] outline-offset-[-0.25px]"
-                    ></div>
-                  ))}
-                </div>
-              </div>
+            {/* Feature Section */}
+            <div className="w-full border-t border-b border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#0a0a0b] via-[#080808] to-[#060607] relative overflow-hidden">
+              <div
+                className="absolute inset-0 pointer-events-none opacity-90"
+                style={{
+                  background: `
+                    radial-gradient(circle at 18% 22%, rgba(111, 214, 255, 0.08), transparent 32%),
+                    radial-gradient(circle at 82% 18%, rgba(130, 119, 255, 0.08), transparent 30%),
+                    radial-gradient(circle at 64% 82%, rgba(0, 255, 178, 0.05), transparent 28%)
+                  `
+                }}
+              />
 
-              <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                {/* Right decorative pattern - Reduced elements */}
-                <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col justify-start items-start">
-                  {Array.from({ length: 20 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(255,255,255,0.1)] outline-offset-[-0.25px]"
-                    ></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {/* Bento Grid Section */}
-            <div className="w-full border-b border-[rgba(255,255,255,0.1)] flex flex-col justify-center items-center">
-              {/* Header Section */}
-              <div className="self-stretch px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8 sm:py-12 md:py-16 border-b border-[rgba(255,255,255,0.1)] flex justify-center items-center gap-6">
-                <div className="w-full max-w-[1200px] px-4 sm:px-6 py-4 sm:py-5 shadow-[0px_2px_4px_rgba(50,45,43,0.06)] overflow-hidden rounded-lg flex flex-col justify-start items-center gap-3 sm:gap-4 shadow-none">
-                  <Badge
-                    icon={
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="1" y="1" width="4" height="4" stroke="#d9d9d9" strokeWidth="1" fill="none" />
-                        <rect x="7" y="1" width="4" height="4" stroke="#d9d9d9" strokeWidth="1" fill="none" />
-                        <rect x="1" y="7" width="4" height="4" stroke="#d9d9d9" strokeWidth="1" fill="none" />
-                        <rect x="7" y="7" width="4" height="4" stroke="#d9d9d9" strokeWidth="1" fill="none" />
-                      </svg>
-                    }
-                    text="Why reposs"
-                  />
-                  <div className="w-full max-w-[1000px] text-center flex justify-center flex-col text-[#d9d9d9] text-xl sm:text-2xl md:text-3xl lg:text-5xl font-semibold leading-tight md:leading-[60px] font-sans tracking-tight">
-                    Built for clarity when exploring open source
-                  </div>
-                  <div className="self-stretch text-center text-[#a0a0a0] text-sm sm:text-base font-normal leading-6 sm:leading-7 font-sans">
-                    Stay focused with tools that organize search, context,
-                    <br />
-                    and turn repository data into confident decisions.
-                  </div>
-                </div>
-              </div>
-
-              {/* Bento Grid Content */}
-              <div className="self-stretch flex justify-center items-start">
-                {/* Left pattern - Reduced elements */}
-                <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col">
-                    {Array.from({ length: 50 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(255,255,255,0.1)] outline-offset-[-0.25px]"
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 border-l border-r border-[rgba(255,255,255,0.1)]">
-
-                  {/* Top Left – Minimal Repo Overview */}
-                  <div className="border-b md:border-r border-[rgba(255,255,255,0.1)] p-6 lg:p-12 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-[#d9d9d9] text-xl font-semibold">Repository insights</h3>
-                      <p className="text-[#a0a0a0] text-base">
-                        A distilled view of stars, activity, and structure so you capture signal fast.
-                      </p>
+              <div className="relative w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-12 sm:py-14 md:py-16 lg:py-20 flex justify-center">
+                <div className="w-full max-w-[1180px] flex flex-col gap-8 sm:gap-10 md:gap-12">
+                  <div className="flex flex-col items-center text-center gap-3 sm:gap-4 md:gap-5">
+                    <Badge
+                      icon={
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="1" y="1" width="10" height="10" rx="2" stroke="#d9d9d9" strokeWidth="1" fill="none" />
+                          <path d="M3 6h6" stroke="#d9d9d9" strokeWidth="1" strokeLinecap="round" />
+                        </svg>
+                      }
+                      text="Features"
+                    />
+                    <div className="text-[#f5f5f5] text-[28px] sm:text-[34px] md:text-[40px] lg:text-[44px] font-semibold leading-[1.1] tracking-tight max-w-[760px]">
+                      Built to simplify open-source discovery
                     </div>
+                    <p className="text-[#a0a0a0] text-sm sm:text-base md:text-lg leading-relaxed max-w-[760px]">
+                      Explore GitHub repositories with structured filters, curated signals, and fast navigation that reduce noise and surface relevance.
+                    </p>
+                  </div>
 
-                    <div className="w-full h-[240px] rounded-lg bg-[#303030] relative flex items-center justify-center">
-                      {/* Minimal block visualization */}
-                      <div className="grid grid-cols-4 gap-3 w-3/4">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <div key={i} className="h-6 rounded bg-[rgba(255,255,255,0.1)]" />
-                        ))}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-2 gap-4 sm:gap-5 lg:gap-6">
+                    <FeatureTile
+                      title="Repository discovery"
+                      description="Search and browse GitHub repositories using language, stars, topics, and activity to quickly find relevant projects."
+                      className="lg:col-span-6 lg:row-span-1 min-h-[320px]"
+                    >
+                      <div className="space-y-4 text-sm text-[#a8a8b3] leading-relaxed">
+                        <div className="rounded-2xl border border-white/5 bg-white/5 px-3 py-2 flex items-center gap-2 text-[13px] text-[#dfe1e6]">
+                          <div className="h-9 flex-1 rounded-xl border border-white/10 bg-[#0f0f12] px-3 flex items-center text-[#a8a8b3]">
+                            Search repositories
+                          </div>
+                          <div className="h-9 px-3 rounded-xl border border-white/10 bg-[#11121a] text-[12px] text-[#dfe1e6] flex items-center">
+                            All Languages
+                          </div>
+                          <div className="h-9 px-3 rounded-xl border border-white/10 bg-[#11121a] text-[12px] text-[#dfe1e6] flex items-center">
+                            Most Stars
+                          </div>
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-white/5 bg-[#0d0e12]/80 px-3 py-2">
+                          {["ml-sharp", "agentskills"].map((name) => (
+                            <div key={name} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 hover:bg-white/5 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10" />
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[#dfe1e6] text-[13px] font-medium">{name}</span>
+                                  <span className="text-xs text-[#a0a0a8]">owner</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full bg-[#0f1115] border border-white/10 text-[12px] text-[#dfe1e6]">Python</span>
+                                <span className="px-3 py-1 rounded-full bg-[#11121a] border border-white/10 text-[12px] text-[#dfe1e6]">Legendary</span>
+                                <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-[#dfe1e6]">
+                                  ✕
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p>Use familiar search, filters, and row structure to keep results stable.</p>
                       </div>
-                    </div>
-                  </div>
+                    </FeatureTile>
 
-                  {/* Top Right – Commit Line Flow */}
-                  <div className="border-b border-[rgba(255,255,255,0.1)] p-6 lg:p-12 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-[#d9d9d9] text-xl font-semibold">Commit rhythm</h3>
-                      <p className="text-[#a0a0a0] text-base">
-                        A minimal signature of commit frequency and flow across time.
-                      </p>
-                    </div>
-
-                    <div className="w-full h-[240px] rounded-lg bg-[#303030] relative overflow-hidden flex items-center">
-                      <svg viewBox="0 0 400 200" className="w-full h-full opacity-70">
-                        <polyline
-                          points="0,140 40,120 80,130 120,90 160,110 200,70 240,95 280,60 320,80 360,55 400,65"
-                          fill="none"
-                          stroke="rgba(255,255,255,0.35)"
-                          strokeWidth="10"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Bottom Left – Minimal Dependency Indicators */}
-                  <div className="md:border-r border-[rgba(255,255,255,0.1)] p-6 lg:p-12 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-[#d9d9d9] text-xl font-semibold">Dependency snapshot</h3>
-                      <p className="text-[#a0a0a0] text-base">
-                        Clean representation of linked components and their roles.
-                      </p>
-                    </div>
-
-                    <div className="w-full h-[240px] rounded-lg bg-[#303030] relative flex items-center justify-center">
-                      <div className="flex items-center gap-6">
-                        <div className="w-4 h-4 rounded-full bg-[#d9d9d9]" />
-                        <div className="w-20 h-[2px] bg-[rgba(255,255,255,0.15)]" />
-                        <div className="w-3 h-3 rounded-full bg-[#a0a0a0]" />
-                        <div className="w-16 h-[2px] bg-[rgba(255,255,255,0.15)]" />
-                        <div className="w-3 h-3 rounded-full bg-[#a0a0a0]" />
+                    <FeatureTile
+                      title="Fast filtering and exploration"
+                      description="Instant filtering without losing context, designed for rapid comparison across multiple repositories."
+                      className="lg:col-span-6 lg:row-span-1 min-h-[320px]"
+                    >
+                      <div className="space-y-4 text-sm text-[#a8a8b3] leading-relaxed">
+                        <div className="rounded-2xl border border-white/5 bg-[#0d0e12]/80 p-3 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 text-[12px] text-[#a8a8b3] flex items-center">
+                              Inline filter keeps context
+                            </div>
+                            <div className="h-8 px-3 rounded-xl border border-white/10 bg-[#11121a] text-[12px] text-[#dfe1e6] flex items-center">
+                              Apply
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {["Keyboard", "Inline", "Context on"].map((chip) => (
+                              <span key={chip} className="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[12px] text-[#dfe1e6]">
+                                {chip}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between gap-3 text-[13px] text-[#dfe1e6]">
+                            <span className="inline-flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-white/20" />
+                              Context preserved
+                            </span>
+                            <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-[#dfe1e6]">
+                              ⇄
+                            </div>
+                          </div>
+                        </div>
+                        <p>Filters apply instantly while preserving comparisons side by side.</p>
+                        <p>Consistent spacing and alignment keep every change calm.</p>
                       </div>
-                    </div>
-                  </div>
+                    </FeatureTile>
 
-                  {/* Bottom Right – Minimal Issue Activity */}
-                  <div className="p-6 lg:p-12 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-[#d9d9d9] text-xl font-semibold">Issue activity</h3>
-                      <p className="text-[#a0a0a0] text-base">
-                        Lightweight signal of responsiveness and maintenance health.
-                      </p>
-                    </div>
-
-                    <div className="w-full h-[240px] rounded-lg bg-[#303030] relative flex items-center justify-center">
-                      <div className="grid grid-cols-10 gap-2">
-                        {Array.from({ length: 40 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="w-4 h-4 rounded-sm"
-                            style={{
-                              backgroundColor:
-                                i % 11 === 0
-                                  ? "rgba(37,211,102,0.35)"
-                                  : "rgba(255,255,255,0.10)"
-                            }}
-                          />
-                        ))}
+                    <FeatureTile
+                      title="Staff-picked curation"
+                      description="Highlighted repositories manually selected to surface high-quality, noteworthy, or emerging projects."
+                      className="lg:col-span-4 lg:row-span-1 min-h-[280px]"
+                    >
+                      <div className="space-y-4 text-sm text-[#a8a8b3] leading-relaxed">
+                        <div className="rounded-2xl border border-white/5 bg-[#0d0e12]/80 p-3 space-y-2">
+                          {["Readable docs", "Responsive maintainers", "Clear roadmap"].map((item) => (
+                            <div key={item} className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-[13px] text-[#dfe1e6]">
+                              <span className="inline-flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-white/20" />
+                                {item}
+                              </span>
+                              <span className="h-6 px-2 rounded-lg border border-white/10 bg-[#11121a] text-[11px] text-[#cfd0d3] flex items-center">
+                                curated
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p>Each pick is reviewed for quality, clarity, and momentum before it’s highlighted.</p>
+                        <p>Selections refresh regularly to keep discoveries feeling current.</p>
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </FeatureTile>
 
-                {/* Right pattern - Reduced elements */}
-                <div className="w-4 sm:w-6 md:w-8 lg:w-12 self-stretch relative overflow-hidden">
-                  <div className="w-[120px] sm:w-[140px] md:w-[162px] left-[-40px] sm:left-[-50px] md:left-[-58px] top-[-120px] absolute flex flex-col">
-                    {Array.from({ length: 50 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="self-stretch h-3 sm:h-4 rotate-[-45deg] origin-top-left outline outline-[0.5px] outline-[rgba(255,255,255,0.1)] outline-offset-[-0.25px]"
-                      />
-                    ))}
+                    <FeatureTile
+                      title="Badge-based classification"
+                      description="Repositories grouped using clear badges such as startup, devtools, AI, bug bounty, and GSSoC for faster contextual scanning."
+                      className="lg:col-span-4 lg:row-span-1 min-h-[280px]"
+                    >
+                      <div className="space-y-4 text-sm text-[#a8a8b3] leading-relaxed">
+                        <div className="rounded-2xl border border-white/5 bg-white/5 px-3 py-2 flex flex-wrap gap-2">
+                          {["Startup", "Devtools", "AI", "Bug bounty", "GSSoC", "Community"].map((badge) => (
+                            <span
+                              key={badge}
+                              className="px-3 py-1.5 rounded-full border border-white/10 bg-[#0f1117] text-[12px] text-[#dfe1e6] uppercase tracking-wide"
+                            >
+                              {badge}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="rounded-2xl border border-white/5 bg-[#0d0e12]/80 p-3 space-y-2">
+                          {["Signals stay consistent across categories", "Text-first labels keep scanning calm"].map((line) => (
+                            <div key={line} className="flex items-center justify-between gap-2 text-[13px] text-[#dfe1e6] rounded-xl px-2 py-2 border border-white/5 bg-white/5">
+                              <span className="inline-flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-white/20" />
+                                {line}
+                              </span>
+                              <span className="h-6 px-2 rounded-lg border border-white/10 bg-[#11121a] text-[11px] text-[#cfd0d3] flex items-center">
+                                badge
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p>Badges keep scanning fast while remaining low-noise.</p>
+                      </div>
+                    </FeatureTile>
+
+                    <FeatureTile
+                      title="Unified repository view"
+                      description="Essential GitHub metadata presented cleanly in one place: stars, forks, language, and last activity."
+                      className="lg:col-span-4 lg:row-span-1 min-h-[280px]"
+                    >
+                      <div className="space-y-4 text-sm text-[#a8a8b3] leading-relaxed">
+                        <div className="rounded-2xl border border-white/5 bg-[#0d0e12]/80 p-3 space-y-2">
+                          {["Core details stay together", "Layout stays predictable", "Muted labels keep balance"].map((line) => (
+                            <div key={line} className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-[13px] text-[#dfe1e6]">
+                              <span className="inline-flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-white/20" />
+                                {line}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full bg-[#0f1115] border border-white/10 text-[12px] text-[#dfe1e6]">TypeScript</span>
+                                <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-[#dfe1e6]">
+                                  ⧉
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p>Core metadata sits in one place without clutter.</p>
+                        <p>Muted supporting text keeps the hierarchy calm.</p>
+                      </div>
+                    </FeatureTile>
                   </div>
                 </div>
               </div>
-
             </div>
             {/* FAQ Section */}
             <FAQSection />
