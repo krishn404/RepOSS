@@ -47,22 +47,17 @@ export default function FooterSection() {
           reposs
         </div>
 
-        {/* Right: Credit */}
+        {/* Right: Peerlist Embed */}
         <a
-          href="https://github.com/krishn404/reposs"
+          href="https://peerlist.io/krixn/project/reposs--discover-open-source"
           target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[#d9d9d9] text-sm font-medium font-sans hover:text-[#a0a0a0] transition-colors"
+          rel="noreferrer"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="#d9d9d9"
-          >
-            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.634 1.48 8.06L12 18.897l-7.416 4.103 1.48-8.06L0 9.306l8.332-1.151z" />
-          </svg>
-          Star us
+          <img
+            src="https://peerlist.io/api/v1/projects/embed/PRJHR8DJDMPPE6JQ7CMJNO6DJPG76O?showUpvote=true&theme=dark"
+            alt="reposs - Discover Open Source"
+            style={{ width: "auto", height: "72px" }}
+          />
         </a>
 
       </div>
