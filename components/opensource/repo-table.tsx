@@ -309,7 +309,7 @@ export function RepoTable({
                       </div>
                     </td>
                     <td className="hidden lg:table-cell px-4 py-3 md:py-4 align-middle">
-                      <div className="flex flex-wrap gap-1.5 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {repo.topics?.slice(0, 3).map((topic) => (
                           <Badge
                             key={topic}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { RiNextjsFill } from "react-icons/ri"
 import FAQSection from "@/components/landing/faq-section"
 import CTASection from "@/components/landing/cta-section"
 import FooterSection from "@/components/landing/footer-section"
@@ -329,10 +330,16 @@ export default function LandingPage() {
                 }}
               />
 
-              <div className="relative w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-16 sm:py-20 md:py-24 lg:py-28 flex justify-center">
-                <div className="w-full max-w-[1200px] flex flex-col gap-12 sm:gap-14 md:gap-16">
-                  <div className="flex flex-col items-center text-center gap-4 sm:gap-5 md:gap-6 relative">
-                    <div className="absolute inset-0 flex items-start justify-center pointer-events-none -top-12 sm:-top-16">
+              <div className="relative w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 md:py-20 lg:py-24 xl:py-28 flex justify-center">
+                <div className="w-full max-w-[1200px] flex flex-col gap-8 sm:gap-10 md:gap-12 lg:gap-14 xl:gap-16">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
+                    className="flex flex-col items-center text-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 relative"
+                  >
+                    <div className="absolute inset-0 flex items-start justify-center pointer-events-none -top-8 sm:-top-12 md:-top-16">
                       <div className="relative">
                         <div
                           className="absolute inset-0 blur-3xl opacity-40"
@@ -342,13 +349,13 @@ export default function LandingPage() {
                               radial-gradient(circle at 70% 50%, oklch(0.65 0.18 180 / 0.35) 0%, transparent 60%),
                               radial-gradient(circle at 50% 80%, oklch(0.6 0.15 200 / 0.3) 0%, transparent 50%)
                             `,
-                            width: "400px",
-                            height: "400px",
+                            width: "clamp(250px, 80vw, 400px)",
+                            height: "clamp(250px, 80vw, 400px)",
                             transform: "translate(-50%, 0)",
                             left: "50%",
                           }}
                         />
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mx-auto mb-6">
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6">
                           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 via-cyan-500/10 to-blue-500/20 border border-primary/20 backdrop-blur-sm" />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <svg
@@ -364,68 +371,57 @@ export default function LandingPage() {
                                 fill="currentColor"
                                 fillOpacity="0.9"
                               />
-                              <g opacity="0.8">
-                                <circle
-                                  cx="70"
-                                  cy="30"
-                                  r="12"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                  fill="none"
-                                  className="text-cyan-400"
-                                />
-                                <path
-                                  d="M79 39l8 8"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  className="text-cyan-400"
-                                />
-                              </g>
+                              
                             </svg>
                           </div>
-                          <div className="absolute inset-0 rounded-2xl border border-primary/30 animate-pulse" />
-                          <div className="absolute -inset-2 rounded-2xl border border-primary/10 animate-pulse delay-150" />
+                          <div className="absolute inset-0 rounded-2xl border border-primary/30" />
+                          <div className="absolute -inset-2 rounded-2xl border border-primary/10" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-24 sm:mt-28 md:mt-32" />
+                    <div className="mt-16 sm:mt-20 md:mt-24 lg:mt-28 xl:mt-32" />
 
                     <Badge
                       variant="outline"
-                      className="h-7 px-3 gap-2 bg-muted/50 border-border/60 text-muted-foreground hover:bg-muted transition-colors"
+                      className="h-6 sm:h-7 px-2.5 sm:px-3 gap-1.5 sm:gap-2 bg-muted/50 border-border/60 text-muted-foreground"
                     >
                       <svg
-                        width="14"
-                        height="14"
+                        width="12"
+                        height="12"
                         viewBox="0 0 14 14"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        className="opacity-70"
+                        className="opacity-70 w-3 h-3 sm:w-3.5 sm:h-3.5"
                       >
                         <path d="M7 1L12 4v6l-5 3-5-3V4l5-3z" stroke="currentColor" strokeWidth="1.2" fill="none" />
                       </svg>
-                      <span className="text-xs font-medium">Features</span>
+                      <span className="text-[10px] sm:text-xs font-medium">Features</span>
                     </Badge>
-                    <h2 className="text-foreground text-[32px] sm:text-[40px] md:text-[48px] lg:text-[56px] font-semibold leading-[1.1] tracking-tight max-w-[860px] text-balance">
+                    <h2 className="text-foreground text-[24px] sm:text-[32px] md:text-[40px] lg:text-[48px] xl:text-[56px] font-semibold leading-[1.1] tracking-tight max-w-[860px] text-balance px-2">
                       Built to simplify open-source discovery
                     </h2>
-                    <p className="text-muted-foreground text-base sm:text-lg md:text-xl leading-relaxed max-w-[720px] text-pretty">
+                    <p className="text-muted-foreground text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-[720px] text-pretty px-2">
                       Explore GitHub repositories with structured filters, curated signals, and fast navigation that reduce
                       noise and surface relevance.
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 lg:gap-7">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] as const }}
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 md:gap-6 lg:gap-7"
+                  >
                     <FeatureTile
                       title="Repository discovery"
                       description="Search and browse GitHub repositories using language, stars, topics, and activity to quickly find relevant projects."
                       className="lg:col-span-7"
                     >
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm px-3 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-sm">
-                          <div className="h-9 flex-1 rounded-md border border-border bg-background/95 px-3 flex items-center gap-2 text-muted-foreground text-sm">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm px-2.5 sm:px-3 py-2 sm:py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-sm">
+                          <div className="h-8 sm:h-9 flex-1 rounded-md border border-border bg-background/95 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 text-muted-foreground text-xs sm:text-sm">
                             <svg
                               width="14"
                               height="14"
@@ -437,17 +433,17 @@ export default function LandingPage() {
                               <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
                               <path d="M9 9l3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                             </svg>
-                            <span className="opacity-60 text-xs">Search repositories...</span>
+                            <span className="opacity-60 text-[10px] sm:text-xs">Search repositories...</span>
                           </div>
-                          <button className="h-9 px-3.5 rounded-md border border-border bg-card hover:bg-accent transition-colors text-xs font-medium text-foreground flex items-center gap-1.5">
+                          <button className="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-md border border-border bg-card text-[10px] sm:text-xs font-medium text-foreground flex items-center gap-1 sm:gap-1.5">
                             All Languages
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 sm:w-3 sm:h-3">
                               <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                             </svg>
                           </button>
-                          <button className="h-9 px-3.5 rounded-md border border-border bg-card hover:bg-accent transition-colors text-xs font-medium text-foreground flex items-center gap-1.5">
+                          <button className="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-md border border-border bg-card text-[10px] sm:text-xs font-medium text-foreground flex items-center gap-1 sm:gap-1.5">
                             Most Stars
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 sm:w-3 sm:h-3">
                               <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                             </svg>
                           </button>
@@ -455,7 +451,7 @@ export default function LandingPage() {
 
                         <GitHubRepoTable />
 
-                        <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        <p className="text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
                           Instantly browse repositories with unified metadata and familiar GitHub structure.
                         </p>
                       </div>
@@ -466,17 +462,17 @@ export default function LandingPage() {
                       description="Highlighted repositories manually selected to surface high-quality, noteworthy, or emerging projects."
                       className="lg:col-span-5"
                     >
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         <div className="rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden shadow-sm">
-                          <div className="px-3 py-2.5 border-b border-border/40 bg-muted/20">
+                          <div className="px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-border/40 bg-muted/20">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-foreground">reposs</span>
+                              <span className="text-xs sm:text-sm font-semibold text-foreground">reposs</span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">Discover amazing open-source projects</p>
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">Discover amazing open-source projects</p>
                           </div>
 
-                          <div className="p-2">
-                            <div className="space-y-1">
+                          <div className="p-1.5 sm:p-2">
+                            <div className="space-y-0.5 sm:space-y-1">
                               {[
                                 { name: "Home", active: false },
                                 { name: "Trending", active: false },
@@ -485,28 +481,28 @@ export default function LandingPage() {
                               ].map((item) => (
                                 <div
                                   key={item.name}
-                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+                                  className={`flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm ${
                                     item.active
                                       ? "bg-accent text-foreground font-medium"
-                                      : "text-muted-foreground hover:bg-accent/50"
+                                      : "text-muted-foreground"
                                   }`}
                                 >
-                                  <div className="w-4 h-4 rounded bg-muted/60 flex-shrink-0" />
+                                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded bg-muted/60 flex-shrink-0" />
                                   {item.name}
                                 </div>
                               ))}
                             </div>
                           </div>
 
-                          <div className="px-3 py-2.5 border-t border-border/40 bg-muted/10">
-                            <div className="flex items-start gap-2 p-2.5 rounded-md bg-primary/10 border border-primary/20">
+                          <div className="px-2.5 sm:px-3 py-2 sm:py-2.5 border-t border-border/40 bg-muted/10">
+                            <div className="flex items-start gap-1.5 sm:gap-2 p-2 sm:p-2.5 rounded-md bg-primary/10 border border-primary/20">
                               <svg
-                                width="16"
-                                height="16"
+                                width="14"
+                                height="14"
                                 viewBox="0 0 16 16"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="text-primary flex-shrink-0 mt-0.5"
+                                className="text-primary flex-shrink-0 mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4"
                               >
                                 <path
                                   d="M8 1l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5l2-5z"
@@ -516,8 +512,8 @@ export default function LandingPage() {
                                 />
                               </svg>
                               <div>
-                                <p className="text-[11px] font-medium text-primary">Curated Selection</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                <p className="text-[10px] sm:text-[11px] font-medium text-primary">Curated Selection</p>
+                                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
                                   Quality projects reviewed by maintainers
                                 </p>
                               </div>
@@ -525,7 +521,7 @@ export default function LandingPage() {
                           </div>
                         </div>
 
-                        <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        <p className="text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
                           Navigate to staff picks through the sidebar to discover high-quality, vetted repositories.
                         </p>
                       </div>
@@ -536,16 +532,16 @@ export default function LandingPage() {
                       description="Repositories grouped using clear badges such as startup, devtools, AI, bug bounty, and GSSoC for faster contextual scanning."
                       className="lg:col-span-4"
                     >
-                      <div className="space-y-4">
-                        <div className="rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm p-3 space-y-3 shadow-sm">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm p-2.5 sm:p-3 space-y-2.5 sm:space-y-3 shadow-sm">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                               Categories
                             </span>
-                            <button className="text-xs text-primary hover:underline">Clear all</button>
+                            <button className="text-[10px] sm:text-xs text-primary">Clear all</button>
                           </div>
 
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2">
                             {[
                               { name: "Startup", active: true },
                               { name: "Devtools", active: true },
@@ -556,10 +552,10 @@ export default function LandingPage() {
                             ].map((badge) => (
                               <button
                                 key={badge.name}
-                                className={`px-3 py-1.5 rounded-md border text-xs font-semibold uppercase tracking-wide transition-all ${
+                                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md border text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${
                                   badge.active
                                     ? "bg-primary/10 border-primary/30 text-primary"
-                                    : "bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted/60"
+                                    : "bg-muted/40 border-border/50 text-muted-foreground"
                                 }`}
                               >
                                 {badge.name}
@@ -567,32 +563,32 @@ export default function LandingPage() {
                             ))}
                           </div>
 
-                          <div className="pt-2 border-t border-border/40">
-                            <div className="flex items-center justify-between text-xs">
+                          <div className="pt-1.5 sm:pt-2 border-t border-border/40">
+                            <div className="flex items-center justify-between text-[10px] sm:text-xs">
                               <span className="text-muted-foreground">154 repositories</span>
                               <span className="text-primary font-medium">2 active</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5 sm:space-y-2">
                           {[
                             { category: "Devtools", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
                             { category: "Startup", color: "bg-green-500/10 text-green-400 border-green-500/20" },
                           ].map((item, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border/40 bg-muted/30 hover:bg-muted/50 transition-colors text-xs"
+                              className="flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-border/40 bg-muted/30 text-[10px] sm:text-xs"
                             >
-                              <span className="text-foreground font-medium">Repository {idx + 1}</span>
-                              <span className={`px-2.5 py-1 rounded-md border text-[10px] font-semibold ${item.color}`}>
+                              <span className="text-foreground font-medium truncate">Repository {idx + 1}</span>
+                              <span className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border text-[9px] sm:text-[10px] font-semibold flex-shrink-0 ${item.color}`}>
                                 {item.category}
                               </span>
                             </div>
                           ))}
                         </div>
 
-                        <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        <p className="text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
                           Filter by badge categories to instantly narrow down repositories by context and purpose.
                         </p>
                       </div>
@@ -603,30 +599,30 @@ export default function LandingPage() {
                       description="Essential GitHub metadata presented cleanly in one place: stars, forks, language, and last activity."
                       className="lg:col-span-4"
                     >
-                      <div className="space-y-3">
+                      <div className="space-y-2.5 sm:space-y-3">
                         <div className="rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm overflow-hidden shadow-sm">
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 rounded-lg bg-muted border border-border flex-shrink-0" />
+                          <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+                            <div className="flex items-start gap-2.5 sm:gap-3">
+                              <RiNextjsFill className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex-shrink-0 text-foreground" />
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-foreground truncate">next.js</h4>
-                                <p className="text-xs text-muted-foreground">vercel</p>
+                                <h4 className="text-xs sm:text-sm font-semibold text-foreground truncate">next.js</h4>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground">vercel</p>
                               </div>
                             </div>
 
-                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed line-clamp-2">
                               The React Framework for the Web
                             </p>
 
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex items-center gap-1.5 text-xs">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-yellow-500">
+                            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-yellow-500 w-3 h-3 sm:w-3.5 sm:h-3.5">
                                   <path d="M7 1l2 4 4 .5-3 3 .5 4-3.5-2-3.5 2 .5-4-3-3 4-.5 2-4z" fill="currentColor" />
                                 </svg>
                                 <span className="text-muted-foreground">120k</span>
                               </div>
-                              <div className="flex items-center gap-1.5 text-xs">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-muted-foreground">
+                              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-muted-foreground w-3 h-3 sm:w-3.5 sm:h-3.5">
                                   <path
                                     d="M5 4c0-1 1-2 2-2s2 1 2 2-1 2-2 2zm4 7c0 1-1 2-2 2s-2-1-2-2 1-2 2-2z"
                                     stroke="currentColor"
@@ -639,17 +635,17 @@ export default function LandingPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 border border-border/50 text-xs">
-                                <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                            <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-border/40">
+                              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-muted/60 border border-border/50 text-[10px] sm:text-xs">
+                                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-yellow-500" />
                                 TypeScript
                               </span>
-                              <span className="text-xs text-muted-foreground">Updated today</span>
+                              <span className="text-[10px] sm:text-xs text-muted-foreground">Updated today</span>
                             </div>
                           </div>
                         </div>
 
-                        <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        <p className="text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
                           All essential metadata in a single, scannable view for quick repository evaluation.
                         </p>
                       </div>
@@ -660,52 +656,52 @@ export default function LandingPage() {
                       description="Instant filtering without losing context, designed for rapid comparison across multiple repositories."
                       className="lg:col-span-4"
                     >
-                      <div className="space-y-3">
-                        <div className="rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm p-3 space-y-2.5 shadow-sm">
+                      <div className="space-y-2.5 sm:space-y-3">
+                        <div className="rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm p-2.5 sm:p-3 space-y-2 sm:space-y-2.5 shadow-sm">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                               Filters
                             </span>
-                            <span className="text-xs text-primary font-medium">3 active</span>
+                            <span className="text-[10px] sm:text-xs text-primary font-medium">3 active</span>
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-1.5 sm:space-y-2">
                             {["JavaScript", "Stars > 1000", "Updated this year"].map((label) => (
                               <div
                                 key={label}
-                                className="flex items-center justify-between p-2 rounded-md bg-muted/40 border border-border/50"
+                                className="flex items-center justify-between p-1.5 sm:p-2 rounded-md bg-muted/40 border border-border/50"
                               >
-                                <span className="text-xs font-medium text-foreground">{label}</span>
-                                <button className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+                                <span className="text-[10px] sm:text-xs font-medium text-foreground truncate">{label}</span>
+                                <button className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0 ml-1">✕</button>
                               </div>
                             ))}
                           </div>
 
-                          <div className="pt-2 border-t border-border/40">
-                            <div className="flex items-center justify-between text-xs">
+                          <div className="pt-1.5 sm:pt-2 border-t border-border/40">
+                            <div className="flex items-center justify-between text-[10px] sm:text-xs">
                               <span className="text-muted-foreground">847 results</span>
-                              <button className="text-primary hover:underline">Add filter</button>
+                              <button className="text-primary">Add filter</button>
                             </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                           {["Python", "TypeScript", "Go", "Rust"].map((lang) => (
                             <button
                               key={lang}
-                              className="px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-accent transition-colors text-xs font-medium text-foreground"
+                              className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md border border-border bg-card text-[10px] sm:text-xs font-medium text-foreground"
                             >
                               {lang}
                             </button>
                           ))}
                         </div>
 
-                        <p className="text-[13px] text-muted-foreground leading-relaxed">
+                        <p className="text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
                           Apply multiple filters instantly and switch between language contexts without page reloads.
                         </p>
                       </div>
                     </FeatureTile>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
