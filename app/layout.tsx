@@ -19,9 +19,14 @@ const siteUrl = "https://reposs.xyz"
  * - og-image.jpg → used for WhatsApp, Discord, LinkedIn, Facebook
  * - og-twitter.jpg → used ONLY for Twitter to break cache permanently
  * Both files must exist in /public
+ * 
+ * Twitter cache-busting: Add version query param to force refresh
+ * Update this version number whenever you change the OG image
  */
 const ogImage = `${siteUrl}/og-image.jpg`
-const twitterImage = `${siteUrl}/og-twitter.jpg`
+// Add cache-busting version parameter - increment this when image changes
+const TWITTER_IMAGE_VERSION = "v2"
+const twitterImage = `${siteUrl}/og-twitter.jpg?v=${TWITTER_IMAGE_VERSION}`
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -86,14 +91,20 @@ export const metadata: Metadata = {
   /**
    * Twitter is extremely strict and sometimes ignores structured metadata.
    * These tags force-render even for stubborn cached URLs.
+   * Using cache-busting query parameter to force Twitter to refresh.
    */
   other: {
     "twitter:card": "summary_large_image",
+    "twitter:site": "@reposs",
+    "twitter:creator": "@reposs",
     "twitter:title": "reposs - Discover Open Source",
     "twitter:description":
       "Explore, filter, and review GitHub repositories. Find the right open-source projects to learn from and contribute to.",
     "twitter:image": twitterImage,
+    "twitter:image:src": twitterImage, // Alternative tag some scrapers use
     "twitter:image:alt": "reposs - Discover Open Source",
+    "twitter:image:width": "1200",
+    "twitter:image:height": "630",
   },
 
   robots: {
@@ -108,8 +119,12 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 
   alternates: {
