@@ -10,6 +10,7 @@
 
 import type * as activities from "../activities.js";
 import type * as admin from "../admin.js";
+import type * as aiRecommendations from "../aiRecommendations.js";
 import type * as migrations from "../migrations.js";
 import type * as preferences from "../preferences.js";
 import type * as repositories from "../repositories.js";
@@ -34,6 +35,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activities: typeof activities;
   admin: typeof admin;
+  aiRecommendations: typeof aiRecommendations;
   migrations: typeof migrations;
   preferences: typeof preferences;
   repositories: typeof repositories;

@@ -1,42 +1,58 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { BeamsBackground } from "@/components/opensource/bg-beams"
 import { UserMenu } from "@/components/user-menu"
-import { ContributionPickCard, type ContributionPick } from "@/components/opensource/contribution-pick-card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Sparkles, Github, AlertCircle, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw } from "lucide-react"
 import { useOpenSourceView } from "@/components/opensource/opensource-context"
+import { GitHubUsernameInput } from "@/components/opensource/github-username-input"
+import { ContributionPicksCard } from "@/components/opensource/contribution-picks-card"
+import type { Repository } from "@/components/opensource/repo-table"
+
+interface EnhancedRepository extends Repository {
+  matchReason?: string
+  matchFactors?: string[]
+  firstSteps?: string[]
+  matchScore?: number
+  difficulty?: "Easy" | "Medium" | "Hard"
+}
 
 export default function ContributionPicksPage() {
   const { setActiveNav } = useOpenSourceView()
   const { data: session } = useSession()
-  const [picks, setPicks] = useState<ContributionPick[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [githubUsername, setGithubUsername] = useState("")
-  const [showUsernameInput, setShowUsernameInput] = useState(false)
 
-  // Set active nav on mount
+  const [repositories, setRepositories] = useState<EnhancedRepository[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showUsernameInput, setShowUsernameInput] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+
   useEffect(() => {
     setActiveNav("contributionPicks")
   }, [setActiveNav])
 
-  // Check if user needs to provide GitHub username
   useEffect(() => {
-    // If user is not logged in with GitHub, show input
-    // @ts-ignore - custom property
-    const hasGithubUsername = session?.user?.githubUsername || session?.user?.provider === "github"
-    setShowUsernameInput(!hasGithubUsername)
-  }, [session])
+    const hasGithub = (session?.user as any)?.provider === "github" || !!(session?.user as any)?.githubUsername
+    if (session?.user && hasGithub && !showUsernameInput) {
+      fetchRecommendations()
+    }
+  }, [session?.user, showUsernameInput])
 
-  const fetchContributionPicks = async (username?: string) => {
-    setLoading(true)
+  const fetchRecommendations = useCallback(async (username?: string) => {
+    setIsLoading(true)
     setError(null)
+    setLoadingProgress(0)
+
+    // Simulate loading progress
+    const progressInterval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 90) clearInterval(progressInterval)
+        return prev + Math.random() * 30
+      })
+    }, 200)
 
     try {
       const params = new URLSearchParams()
@@ -48,33 +64,44 @@ export default function ContributionPicksPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch contribution picks")
+        throw new Error(errorData.error || "Failed to fetch recommendations")
       }
 
       const data = await response.json()
-      setPicks(data || [])
+      setRepositories(data.repositories || [])
+      setShowUsernameInput(false)
+      setLoadingProgress(100)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
-      setPicks([])
+      setRepositories([])
+      setLoadingProgress(0)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+      clearInterval(progressInterval)
     }
-  }
+  }, [])
 
-  const handleGetPicks = () => {
-    if (showUsernameInput && !githubUsername.trim()) {
-      setError("Please enter a GitHub username")
-      return
-    }
-    fetchContributionPicks(showUsernameInput ? githubUsername.trim() : undefined)
+  function renderSkeletons(count = 6) {
+    return Array.from({ length: count }).map((_, i) => (
+      <div key={`skeleton-${i}`} className="animate-pulse">
+        <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-lg p-4 space-y-3">
+          <div className="flex justify-between items-start">
+            <div className="w-8 h-8 bg-white/10 rounded-md" />
+            <div className="w-20 h-5 bg-white/10 rounded" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-white/10 rounded w-3/4" />
+            <div className="h-3 bg-white/10 rounded w-1/2" />
+          </div>
+          <div className="h-8 bg-white/10 rounded" />
+          <div className="flex gap-2">
+            <div className="flex-1 h-8 bg-white/10 rounded" />
+            <div className="w-8 h-8 bg-white/10 rounded" />
+          </div>
+        </div>
+      </div>
+    ))
   }
-
-  // Auto-fetch on mount if user has GitHub auth
-  useEffect(() => {
-    if (session?.user && !showUsernameInput) {
-      fetchContributionPicks()
-    }
-  }, [session, showUsernameInput])
 
   return (
     <div className="relative min-h-screen w-full text-white" style={{ backgroundColor: "#121212" }}>
@@ -86,159 +113,97 @@ export default function ContributionPicksPage() {
         style={{ backgroundColor: "rgba(18, 18, 18, 0.8)" }}
       >
         <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-yellow-400" />
-                Contribution Picks
-              </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Personalized repository recommendations based on your GitHub profile
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-semibold text-white">Contribution Picks</h1>
             <UserMenu />
           </div>
-
-          {/* GitHub Username Input (for non-GitHub users) */}
-          {showUsernameInput && (
-            <Card className="border-white/10 bg-white/5 mb-4">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Github className="w-4 h-4" />
-                  Enter GitHub Username
-                </CardTitle>
-                <CardDescription>
-                  Provide your GitHub username to get personalized recommendations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="e.g., octocat"
-                    value={githubUsername}
-                    onChange={(e) => setGithubUsername(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleGetPicks()
-                      }
-                    }}
-                    className="flex-1 border-white/10 text-white placeholder:text-gray-500 focus:border-white/20"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                  />
-                  <Button
-                    onClick={handleGetPicks}
-                    disabled={loading || !githubUsername.trim()}
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                  >
-                    {loading ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      "Get Picks"
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Refresh Button (for GitHub users) */}
-          {!showUsernameInput && (
-            <div className="flex items-center justify-end">
-              <Button
-                onClick={() => fetchContributionPicks()}
-                disabled={loading}
-                variant="outline"
-                className="border-white/10 text-white hover:bg-white/10"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+          <p className="text-sm text-gray-400">
+            Discover open-source repos where you can make an impact based on your GitHub profile
+          </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-8 max-w-7xl mx-auto">
+        {/* GitHub username prompt for Google auth users */}
+        {session?.user &&
+          (session?.user as any)?.provider !== "github" &&
+          !showUsernameInput &&
+          repositories.length === 0 &&
+          !isLoading && <GitHubUsernameInput onSubmit={fetchRecommendations} loading={isLoading} />}
+
+        {/* Error state */}
         {error && (
-          <Card className="border-red-500/20 bg-red-500/10 mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-red-400">
-                <AlertCircle className="w-5 h-5" />
-                <p>{error}</p>
+          <Card className="mb-6 border-rose-500/30 bg-rose-500/10">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-rose-300 mb-3">{error}</p>
+                <Button
+                  onClick={() => fetchRecommendations()}
+                  variant="outline"
+                  size="sm"
+                  className="border-rose-500/30 hover:bg-rose-500/10"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                  Try Again
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {loading && picks.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="border-white/10 bg-white/5">
-                <CardHeader>
-                  <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
-                  <Skeleton className="h-4 w-24 bg-white/10" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-20 w-full bg-white/10 mb-4" />
-                  <Skeleton className="h-16 w-full bg-white/10" />
+        {/* Loading progress indicator */}
+        {isLoading && loadingProgress > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300"
+                  style={{ width: `${loadingProgress}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-400">{Math.round(loadingProgress)}%</span>
+            </div>
+            <p className="text-xs text-gray-500">Analyzing your profile and finding matches...</p>
+          </div>
+        )}
+
+        {/* Repositories grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {isLoading && repositories.length === 0 ? (
+            renderSkeletons(6)
+          ) : repositories.length > 0 ? (
+            repositories.map((repo, index) => <ContributionPicksCard key={repo.id} repo={repo} index={index} />)
+          ) : !isLoading && !error ? (
+            // Empty state
+            <div className="col-span-full">
+              <Card className="border-white/10 bg-gradient-to-br from-white/[0.03] to-white/[0.01]">
+                <CardContent className="p-12 text-center">
+                  <p className="text-gray-400 text-sm mb-4">No recommendations available yet</p>
+                  {(session?.user as any)?.provider !== "github" && (
+                    <Button
+                      onClick={() => setShowUsernameInput(true)}
+                      variant="outline"
+                      className="border-white/10 hover:bg-white/5"
+                    >
+                      Enter GitHub Username
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : picks.length === 0 && !loading ? (
-          <Card className="border-white/10 bg-white/5">
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Sparkles className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">No recommendations yet</h3>
-                <p className="text-gray-400 mb-6">
-                  {showUsernameInput
-                    ? "Enter your GitHub username and click 'Get Picks' to see personalized recommendations"
-                    : "Click 'Refresh' to generate your personalized contribution picks"}
-                </p>
-                {showUsernameInput && (
-                  <Button
-                    onClick={handleGetPicks}
-                    disabled={!githubUsername.trim()}
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                  >
-                    Get My Picks
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-400">
-                Found <span className="text-white font-semibold">{picks.length}</span> personalized
-                recommendations
-              </p>
             </div>
+          ) : null}
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {picks.map((pick, index) => (
-                <ContributionPickCard key={pick.url} pick={pick} index={index} />
-              ))}
-            </div>
+        {/* Results summary */}
+        {repositories.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <p className="text-xs text-gray-500 font-medium">
+              Showing {repositories.length} personalized recommendations based on your GitHub activity
+            </p>
           </div>
         )}
       </div>
     </div>
   )
 }
-

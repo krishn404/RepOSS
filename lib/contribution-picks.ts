@@ -1,57 +1,7 @@
-import { Octokit } from "@octokit/rest"
-import { createOctokit } from "./github"
+import type { Octokit } from "@octokit/rest"
+import type { UserProfile, RepoSignals, ContributionPick } from "@/types/index"
 
-export interface UserProfile {
-  languages: Map<string, number> // language -> bytes count
-  topics: Set<string> // topics from starred repos
-  frameworks: Set<string> // inferred frameworks
-  activeRepos: Array<{
-    fullName: string
-    language: string | null
-    pushedAt: string
-    topics: string[]
-  }>
-  repoTypes: {
-    apps: number
-    libraries: number
-    tooling: number
-  }
-  lastActivityWindow: number // days since last commit
-}
-
-export interface RepoSignals {
-  languages: string[]
-  topics: string[]
-  frameworks: string[]
-  maintenanceHealth: number // 0-100
-  contributionFriendliness: number // 0-100
-  repoType: "app" | "library" | "tool" | "unknown"
-  complexity: "Easy" | "Medium" | "Hard"
-  hasGoodFirstIssue: boolean
-  hasHelpWanted: boolean
-  hasContributing: boolean
-  hasCodeOfConduct: boolean
-  recentCommits: boolean
-  openIssuesTrend: "increasing" | "stable" | "decreasing"
-}
-
-export interface ContributionPick {
-  name: string
-  url: string
-  score: number
-  difficulty: "Easy" | "Medium" | "Hard"
-  reason: string
-  match_factors: string[]
-  first_steps: string
-}
-
-/**
- * Build user profile from GitHub data
- */
-export async function buildUserProfile(
-  octokit: Octokit,
-  username: string
-): Promise<UserProfile> {
+export async function buildUserProfile(octokit: Octokit, username: string): Promise<UserProfile> {
   const languages = new Map<string, number>()
   const topics = new Set<string>()
   const frameworks = new Set<string>()
@@ -71,10 +21,7 @@ export async function buildUserProfile(
     // Get languages from owned repos
     for (const repo of ownedRepos.slice(0, 50)) {
       if (repo.language) {
-        languages.set(
-          repo.language,
-          (languages.get(repo.language) || 0) + (repo.size || 0)
-        )
+        languages.set(repo.language, (languages.get(repo.language) || 0) + (repo.size || 0))
       }
 
       // Infer repo type
@@ -174,9 +121,6 @@ export async function buildUserProfile(
   }
 }
 
-/**
- * Extract ranking signals from a repository
- */
 export async function extractRepoSignals(
   octokit: Octokit,
   repo: {
@@ -190,7 +134,7 @@ export async function extractRepoSignals(
     open_issues_count: number
     updated_at: string
     pushed_at?: string
-  }
+  },
 ): Promise<RepoSignals> {
   const [owner, repoName] = repo.full_name.split("/")
   const languages: string[] = []
@@ -246,12 +190,8 @@ export async function extractRepoSignals(
     })
     if (Array.isArray(contents)) {
       const fileNames = contents.map((item: any) => item.name.toLowerCase())
-      hasContributing = fileNames.some((name) =>
-        name.includes("contributing")
-      )
-      hasCodeOfConduct = fileNames.some((name) =>
-        name.includes("code-of-conduct") || name.includes("conduct")
-      )
+      hasContributing = fileNames.some((name) => name.includes("contributing"))
+      hasCodeOfConduct = fileNames.some((name) => name.includes("code-of-conduct") || name.includes("conduct"))
     }
   } catch (error) {
     // Non-fatal
@@ -344,21 +284,16 @@ export async function extractRepoSignals(
   }
 }
 
-/**
- * Score a repository against user profile
- */
 export function scoreRepository(
   userProfile: UserProfile,
   repoSignals: RepoSignals,
-  repo: { full_name: string; description: string | null; stargazers_count: number }
+  repo: { full_name: string; description: string | null; stargazers_count: number },
 ): number {
   let score = 0
 
   // Language match (highest weight: 40 points)
   const userLanguages = Array.from(userProfile.languages.keys())
-  const languageMatches = repoSignals.languages.filter((lang) =>
-    userLanguages.includes(lang)
-  )
+  const languageMatches = repoSignals.languages.filter((lang) => userLanguages.includes(lang))
   if (languageMatches.length > 0) {
     score += 40 * (languageMatches.length / Math.max(repoSignals.languages.length, 1))
   } else {
@@ -367,17 +302,13 @@ export function scoreRepository(
   }
 
   // Framework/tooling match (20 points)
-  const frameworkMatches = repoSignals.frameworks.filter((fw) =>
-    userProfile.frameworks.has(fw)
-  )
+  const frameworkMatches = repoSignals.frameworks.filter((fw) => userProfile.frameworks.has(fw))
   if (frameworkMatches.length > 0) {
     score += 20
   }
 
   // Interest alignment from topics (15 points)
-  const topicMatches = repoSignals.topics.filter((topic) =>
-    userProfile.topics.has(topic)
-  )
+  const topicMatches = repoSignals.topics.filter((topic) => userProfile.topics.has(topic))
   if (topicMatches.length > 0) {
     score += 15 * Math.min(topicMatches.length / 3, 1)
   }
@@ -409,13 +340,10 @@ export function scoreRepository(
   return Math.min(100, Math.max(0, score))
 }
 
-/**
- * Generate reason and match factors for a recommendation
- */
 export function generateRecommendationDetails(
   userProfile: UserProfile,
   repoSignals: RepoSignals,
-  repo: { full_name: string; description: string | null }
+  repo: { full_name: string; description: string | null },
 ): {
   reason: string
   match_factors: string[]
@@ -426,18 +354,14 @@ export function generateRecommendationDetails(
 
   // Language match
   const userLanguages = Array.from(userProfile.languages.keys())
-  const languageMatches = repoSignals.languages.filter((lang) =>
-    userLanguages.includes(lang)
-  )
+  const languageMatches = repoSignals.languages.filter((lang) => userLanguages.includes(lang))
   if (languageMatches.length > 0) {
     matchFactors.push(languageMatches[0])
     reasons.push(`matches your ${languageMatches[0]} experience`)
   }
 
   // Framework match
-  const frameworkMatches = repoSignals.frameworks.filter((fw) =>
-    userProfile.frameworks.has(fw)
-  )
+  const frameworkMatches = repoSignals.frameworks.filter((fw) => userProfile.frameworks.has(fw))
   if (frameworkMatches.length > 0) {
     matchFactors.push(frameworkMatches[0])
     reasons.push(`uses ${frameworkMatches[0]}`)
@@ -490,14 +414,7 @@ export function generateRecommendationDetails(
   }
 }
 
-/**
- * Ensure diversity in recommendations (mix ecosystems, avoid duplicates)
- */
-export function ensureDiversity(
-  picks: ContributionPick[],
-  minCount: number = 5,
-  maxCount: number = 10
-): ContributionPick[] {
+export function ensureDiversity(picks: ContributionPick[], minCount = 5, maxCount = 10): ContributionPick[] {
   if (picks.length <= maxCount) {
     return picks.slice(0, maxCount)
   }
@@ -514,9 +431,7 @@ export function ensureDiversity(
 
   // Select top picks from each group
   const diverse: ContributionPick[] = []
-  const groupEntries = Array.from(groups.entries()).sort(
-    (a, b) => b[1].length - a[1].length
-  )
+  const groupEntries = Array.from(groups.entries()).sort((a, b) => b[1].length - a[1].length)
 
   for (const [, groupPicks] of groupEntries) {
     if (diverse.length >= maxCount) break
@@ -535,4 +450,3 @@ export function ensureDiversity(
 
   return diverse.slice(0, maxCount)
 }
-

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authConfig } from "@/lib/auth"
 import { createOctokit } from "@/lib/github"
@@ -8,10 +8,14 @@ import {
   buildUserProfile,
   extractRepoSignals,
   scoreRepository,
-  generateRecommendationDetails,
   ensureDiversity,
-  type ContributionPick,
 } from "@/lib/contribution-picks"
+import {
+  getGroqRecommendations,
+  generateMatchReasoning,
+} from "@/lib/groq-recommendations"
+import type { ContributionPick } from "@/types/index"
+import type { Repository, UserProfile, RepoSignals } from "@/types/index"
 
 function getConvexClient() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
@@ -25,77 +29,59 @@ function getConvexClient() {
 const CACHE_DURATION = 18 * 60 * 60 // 18 hours in seconds
 
 /**
- * Get all repositories from reposs.xyz
- * Fetches from Convex database or falls back to GitHub search
+ * Get candidate repositories from GitHub based on user's profile
+ * Searches for repos matching user's languages and interests
  */
-async function getRepossRepositories(
+async function getCandidateRepositories(
   octokit: ReturnType<typeof createOctokit>,
-  convexClient: ConvexHttpClient | null
-): Promise<
-  Array<{
-    id: number
-    full_name: string
-    name: string
-    description: string | null
-    language: string | null
-    topics: string[]
-    stargazers_count: number
-    forks_count: number
-    open_issues_count: number
-    updated_at: string
-    pushed_at?: string
-    html_url: string
-  }>
-> {
+  userProfile: UserProfile,
+  existingRepos: Set<string>,
+): Promise<any[]> {
   const repos: any[] = []
+  const userLanguages = Array.from(userProfile.languages.keys()).slice(0, 3) // Top 3 languages
 
-  // Try to get from Convex first
-  if (convexClient) {
-    try {
-      const convexRepos = await convexClient.query("repositories:getAllRepositories" as any, {
-        limit: 200,
-      })
-
-      if (convexRepos && convexRepos.length > 0) {
-        repos.push(...convexRepos)
-      }
-    } catch (error) {
-      console.warn("Failed to fetch from Convex, falling back to GitHub:", error)
-    }
-  }
-
-  // Fallback: Get popular open-source repos from GitHub
-  if (repos.length === 0) {
+  // Search for repos based on user's primary languages
+  for (const lang of userLanguages) {
     try {
       const { data } = await octokit.search.repos({
-        q: "is:public stars:>1000",
+        q: `language:${lang} is:public stars:>100`,
         sort: "stars",
         order: "desc",
-        per_page: 100,
+        per_page: 30,
       })
-
-      for (const repo of data.items) {
-        repos.push({
-          id: repo.id,
-          full_name: repo.full_name,
-          name: repo.name,
-          description: repo.description || null,
-          language: repo.language || null,
-          topics: repo.topics || [],
-          stargazers_count: repo.stargazers_count,
-          forks_count: repo.forks_count,
-          open_issues_count: repo.open_issues_count || 0,
-          updated_at: repo.updated_at,
-          pushed_at: repo.pushed_at,
-          html_url: repo.html_url,
-        })
-      }
+      
+      // Filter out existing repos
+      const newRepos = data.items.filter((repo: any) => !existingRepos.has(repo.full_name))
+      repos.push(...newRepos)
     } catch (error) {
-      console.error("Failed to fetch repositories from GitHub:", error)
+      console.warn(`Failed to search repos for language ${lang}:`, error)
     }
   }
 
-  return repos
+  // Also search for repos with help-wanted label
+  try {
+    const { data } = await octokit.search.repos({
+      q: `is:public stars:>500`,
+      sort: "updated",
+      order: "desc",
+      per_page: 50,
+    })
+    
+    const newRepos = data.items.filter((repo: any) => !existingRepos.has(repo.full_name))
+    repos.push(...newRepos)
+  } catch (error) {
+    console.warn("Failed to search help-wanted repos:", error)
+  }
+
+  // Remove duplicates
+  const uniqueRepos = new Map<string, any>()
+  for (const repo of repos) {
+    if (!uniqueRepos.has(repo.full_name) && !existingRepos.has(repo.full_name)) {
+      uniqueRepos.set(repo.full_name, repo)
+    }
+  }
+
+  return Array.from(uniqueRepos.values())
 }
 
 /**
@@ -104,7 +90,7 @@ async function getRepossRepositories(
 async function getGitHubUsername(
   session: any,
   octokit: ReturnType<typeof createOctokit>,
-  convexClient: ConvexHttpClient | null
+  convexClient: ConvexHttpClient | null,
 ): Promise<string | null> {
   // First, try to get from session (stored during OAuth)
   // @ts-ignore - custom property added in auth.ts
@@ -128,17 +114,8 @@ async function getGitHubUsername(
             return data.login
           }
         } catch {
-          // providerAccountId might be numeric, try fetching user by ID
-          try {
-            const { data } = await octokit.users.getById({
-              user_id: parseInt(user.providerAccountId, 10),
-            })
-            if (data.login) {
-              return data.login
-            }
-          } catch {
-            // Continue to other methods
-          }
+          // providerAccountId might be numeric, skip for now (would need different API endpoint)
+          // Continue to other methods
         }
       }
     } catch (error) {
@@ -179,10 +156,89 @@ async function getGitHubUsername(
   return null
 }
 
+/**
+ * Add function to get user's existing repos (starred, forked, owned, contributed to)
+ */
+async function getUserExistingRepos(octokit: ReturnType<typeof createOctokit>, username: string): Promise<Set<string>> {
+  const existingRepoFullNames = new Set<string>()
+
+  try {
+    // Get owned repos
+    const { data: ownedRepos } = await octokit.repos.listForUser({
+      username,
+      per_page: 100,
+      type: "owner",
+    })
+    ownedRepos.forEach((repo) => existingRepoFullNames.add(repo.full_name))
+  } catch (error) {
+    console.warn("Failed to fetch owned repos:", error)
+  }
+
+  try {
+    // Get starred repos - MOST IMPORTANT - check all pages
+    let page = 1
+    let hasMore = true
+    while (hasMore && page <= 5) {
+      const { data: starredRepos } = await octokit.activity.listReposStarredByUser({
+        username,
+        per_page: 100,
+        page,
+      })
+      starredRepos.forEach((item) => {
+        const repo = 'repo' in item ? item.repo : item
+        if (repo.full_name) existingRepoFullNames.add(repo.full_name)
+      })
+      hasMore = starredRepos.length === 100
+      page++
+    }
+  } catch (error) {
+    console.warn("Failed to fetch starred repos:", error)
+  }
+
+  try {
+    // Get forked repos
+    const { data: allRepos } = await octokit.repos.listForUser({
+      username,
+      per_page: 100,
+      type: "all",
+    })
+    allRepos.filter((repo) => repo.fork).forEach((repo) => existingRepoFullNames.add(repo.full_name))
+  } catch (error) {
+    console.warn("Failed to fetch forked repos:", error)
+  }
+
+  return existingRepoFullNames
+}
+
+/**
+ * Convert scored picks to Repository format for RepoTable
+ */
+function convertPicksToRepositories(picks: (ContributionPick & { repo: any })[]): Repository[] {
+  return picks.map((pick) => ({
+    id: pick.repo.id,
+    name: pick.repo.name,
+    full_name: pick.repo.full_name,
+    description: pick.repo.description || "",
+    url: pick.repo.html_url,
+    language: pick.repo.language || "",
+    stargazers_count: pick.repo.stargazers_count,
+    forks_count: pick.repo.forks_count,
+    watchers_count: 0,
+    open_issues_count: pick.repo.open_issues_count || 0,
+    owner: {
+      login: pick.repo.owner?.login || "",
+      avatar_url: pick.repo.owner?.avatar_url || "",
+    },
+    topics: pick.repo.topics || [],
+    updated_at: pick.repo.updated_at,
+    html_url: pick.repo.html_url,
+  }))
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig)
-    
+    const session = (await getServerSession(authConfig as any)) as any
+
     // Allow authenticated users (GitHub, Google, or any provider) and guests
     // For guests/unauthenticated users, they must provide githubUsername parameter
     const { searchParams } = new URL(request.url)
@@ -192,12 +248,12 @@ export async function GET(request: NextRequest) {
     if (!session?.user && !providedGithubUsername) {
       return NextResponse.json(
         { error: "Authentication required or provide githubUsername query parameter" },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
     // Use session user ID if available, otherwise use guest identifier with GitHub username
-    const userId = session?.user?.id || `guest:${providedGithubUsername || "anonymous"}`
+    const userId = (session?.user as any)?.id || `guest:${providedGithubUsername || "anonymous"}`
     const octokit = createOctokit()
     const convexClient = getConvexClient()
 
@@ -212,10 +268,7 @@ export async function GET(request: NextRequest) {
         })
         githubUsername = data.login
       } catch (error) {
-        return NextResponse.json(
-          { error: `Invalid GitHub username: ${providedGithubUsername}` },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: `Invalid GitHub username: ${providedGithubUsername}` }, { status: 400 })
       }
     } else if (session?.user) {
       // Try to auto-detect from session
@@ -230,9 +283,9 @@ export async function GET(request: NextRequest) {
     // Check cache first (include username in cache key for proper caching)
     const cacheKey = `contribution-picks:${userId}:${githubUsername}`
     try {
-      const cached = await redis.get<ContributionPick[]>(cacheKey)
+      const cached = await redis.get<Repository[]>(cacheKey)
       if (cached) {
-        return NextResponse.json(cached)
+        return NextResponse.json({ repositories: cached })
       }
     } catch (error) {
       console.warn("Cache read error:", error)
@@ -247,64 +300,108 @@ export async function GET(request: NextRequest) {
       return await getFallbackRecommendations()
     }
 
-    // Get repositories from reposs.xyz
-    const repos = await getRepossRepositories(octokit, convexClient)
+    // Get user's existing repos (starred, forked, owned) to exclude
+    let existingRepoIds: Set<string> = new Set()
+    try {
+      existingRepoIds = await getUserExistingRepos(octokit, githubUsername)
+      console.log(`[Groq] User has ${existingRepoIds.size} existing repos to exclude`)
+    } catch (error) {
+      console.warn("Failed to fetch user's existing repos:", error)
+    }
 
-    if (repos.length === 0) {
+    // Get candidate repositories based on user's profile
+    const candidateRepos = await getCandidateRepositories(octokit, userProfile, existingRepoIds)
+    console.log(`[Groq] Found ${candidateRepos.length} candidate repos (excluding ${existingRepoIds.size} existing)`)
+
+    if (candidateRepos.length === 0) {
       return await getFallbackRecommendations()
     }
 
-    // Score and rank repositories
-    const scoredRepos: Array<ContributionPick & { repo: any; signals: any }> = []
+    // Use Groq to analyze and select best matching repos
+    const groqSelectedRepos = await getGroqRecommendations(userProfile, candidateRepos, existingRepoIds)
+    console.log(`[Groq] Selected ${groqSelectedRepos.length} repos via Groq analysis`)
 
-    // Process in batches to avoid rate limits and timeouts
-    const batchSize = 10
-    for (let i = 0; i < Math.min(repos.length, 100); i += batchSize) {
-      const batch = repos.slice(i, i + batchSize)
+    // If Groq didn't return enough, fallback to scoring
+    let finalRepos = groqSelectedRepos
+    if (finalRepos.length < 5) {
+      // Score remaining candidates and add top ones
+      const scoredRepos: Array<{ repo: any; score: number }> = []
+      
+      for (const repo of candidateRepos) {
+        if (existingRepoIds.has(repo.full_name)) continue
+        if (groqSelectedRepos.some((r) => r.full_name === repo.full_name)) continue
 
-      const batchPromises = batch.map(async (repo) => {
         try {
           const signals = await extractRepoSignals(octokit, repo)
           const score = scoreRepository(userProfile, signals, repo)
-          const details = generateRecommendationDetails(userProfile, signals, repo)
-
-          return {
-            name: repo.full_name,
-            url: repo.html_url,
-            score,
-            difficulty: signals.complexity,
-            reason: details.reason,
-            match_factors: details.match_factors,
-            first_steps: details.first_steps,
-            repo,
-            signals,
-          }
+          scoredRepos.push({ repo, score })
         } catch (error) {
-          console.warn(`Failed to process repo ${repo.full_name}:`, error)
-          return null
+          console.warn(`Failed to score repo ${repo.full_name}:`, error)
         }
-      })
+      }
 
-      const results = await Promise.all(batchPromises)
-      scoredRepos.push(...(results.filter((r) => r !== null) as any))
+      scoredRepos.sort((a, b) => b.score - a.score)
+      const topScored = scoredRepos.slice(0, 10 - finalRepos.length).map((item) => item.repo)
+      finalRepos = [...finalRepos, ...topScored]
     }
 
-    // Sort by score and ensure diversity
-    scoredRepos.sort((a, b) => b.score - a.score)
-    const diversePicks = ensureDiversity(
-      scoredRepos.map(({ repo, signals, ...pick }) => pick),
-      5,
-      10
+    // Limit to 10 repos
+    finalRepos = finalRepos.slice(0, 10)
+
+    // Convert to repository format and enhance with Groq data
+    const enhancedRepositories = await Promise.all(
+      finalRepos.map(async (repo) => {
+        try {
+          const repoSignals = await extractRepoSignals(octokit, repo)
+          const groqData = (repo as any).groqData
+          const { reason, matchFactors, firstSteps, matchScore, difficulty } = await generateMatchReasoning(
+            userProfile,
+            repo,
+            repoSignals,
+            groqData,
+          )
+
+          return {
+            id: repo.id,
+            name: repo.name,
+            full_name: repo.full_name,
+            description: repo.description || "",
+            url: repo.html_url,
+            language: repo.language || "",
+            stargazers_count: repo.stargazers_count,
+            forks_count: repo.forks_count,
+            watchers_count: 0,
+            open_issues_count: repo.open_issues_count || 0,
+            owner: {
+              login: repo.owner?.login || "",
+              avatar_url: repo.owner?.avatar_url || "",
+            },
+            topics: repo.topics || [],
+            updated_at: repo.updated_at,
+            html_url: repo.html_url,
+            matchReason: reason,
+            matchFactors,
+            firstSteps,
+            matchScore,
+            difficulty,
+          }
+        } catch (error) {
+          console.error(`Failed to process repo ${repo.full_name}:`, error)
+          return null
+        }
+      }),
     )
+
+    const repositories = enhancedRepositories.filter((r) => r !== null) as any[]
 
     // Cache results
     try {
-      await redis.set(cacheKey, diversePicks, { ex: CACHE_DURATION })
+      await redis.set(cacheKey, enhancedRepositories, { ex: CACHE_DURATION })
     } catch (error) {
       console.warn("Failed to cache results:", error)
     }
 
-    return NextResponse.json(diversePicks)
+    return NextResponse.json({ repositories: enhancedRepositories })
   } catch (error) {
     console.error("Error generating contribution picks:", error)
     return await getFallbackRecommendations()
@@ -312,13 +409,12 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Fallback recommendations when GitHub data is minimal
+ * Fallback recommendations in Repository format
  */
 async function getFallbackRecommendations(): Promise<NextResponse> {
   const octokit = createOctokit()
 
   try {
-    // Get beginner-friendly repositories
     const { data } = await octokit.search.repos({
       q: "is:public label:good-first-issue stars:>100",
       sort: "stars",
@@ -326,31 +422,29 @@ async function getFallbackRecommendations(): Promise<NextResponse> {
       per_page: 10,
     })
 
-    const picks: ContributionPick[] = data.items.slice(0, 10).map((repo, index) => {
-      const languages = repo.language ? [repo.language] : []
-      const topics = (repo.topics || []).slice(0, 3)
+    const repositories: Repository[] = data.items.slice(0, 10).map((repo) => ({
+      id: repo.id,
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description || "",
+      url: repo.html_url,
+      language: repo.language || "",
+      stargazers_count: repo.stargazers_count,
+      forks_count: repo.forks_count,
+      watchers_count: 0,
+      open_issues_count: repo.open_issues_count || 0,
+      owner: {
+        login: repo.owner?.login || "",
+        avatar_url: repo.owner?.avatar_url || "",
+      },
+      topics: repo.topics || [],
+      updated_at: repo.updated_at || new Date().toISOString(),
+      html_url: repo.html_url,
+    }))
 
-      return {
-        name: repo.full_name,
-        url: repo.html_url,
-        score: 70 - index * 2, // Decreasing scores
-        difficulty: repo.stargazers_count < 500 ? "Easy" : repo.stargazers_count < 2000 ? "Medium" : "Hard",
-        reason: `This ${repo.stargazers_count < 500 ? "beginner-friendly" : "popular"} project has good first issues and active maintenance`,
-        match_factors: [
-          ...languages,
-          ...topics.slice(0, 2),
-          "good first issues",
-          "active community",
-        ].slice(0, 4),
-        first_steps: "Pick a good first issue to get started",
-      }
-    })
-
-    return NextResponse.json(picks)
+    return NextResponse.json({ repositories })
   } catch (error) {
     console.error("Fallback recommendations failed:", error)
-    // Ultimate fallback: return empty array
-    return NextResponse.json([])
+    return NextResponse.json({ repositories: [] })
   }
 }
-
