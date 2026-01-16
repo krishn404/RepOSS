@@ -139,6 +139,7 @@ export default function OpenSourcePage() {
     { id: "home", label: "Home", icon: null },
     { id: "trending", label: "Trending", icon: null },
     { id: "staffPicked", label: "Staff Picked", icon: null },
+    { id: "contributionPicks", label: "Contribution Picks", icon: null },
   ] as const
 
   return (

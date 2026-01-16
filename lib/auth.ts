@@ -76,6 +76,10 @@ export const authConfig = {
         token.name = user.name
         token.image = user.image
         token.provider = account?.provider
+        // Store GitHub username if available (for GitHub OAuth)
+        if (account?.provider === "github" && account?.login) {
+          token.githubUsername = account.login
+        }
       }
       return token
     },
@@ -85,6 +89,8 @@ export const authConfig = {
         session.user.email = token.email as string | undefined
         session.user.name = token.name as string | undefined
         session.user.image = token.image as string | undefined
+        // @ts-ignore - custom property
+        session.user.githubUsername = (token.githubUsername as string) || undefined
       }
       return session
     },

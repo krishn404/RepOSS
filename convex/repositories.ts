@@ -138,3 +138,35 @@ export const removeSavedRepository = mutation({
     }
   },
 })
+
+/**
+ * Get all repositories for contribution picks
+ * Returns a paginated list of repositories
+ */
+export const getAllRepositories = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  async handler(ctx, args) {
+    const limit = args.limit || 200
+    const repos = await ctx.db
+      .query("repositories")
+      .order("desc")
+      .take(limit)
+    
+    return repos.map((repo) => ({
+      id: repo.repoId,
+      full_name: repo.fullName,
+      name: repo.name,
+      description: repo.description || null,
+      language: repo.language || null,
+      topics: repo.topics || [],
+      stargazers_count: repo.stars || 0,
+      forks_count: repo.forks || 0,
+      open_issues_count: 0, // Not stored, will be fetched from GitHub if needed
+      updated_at: repo.pushedAt ? new Date(repo.pushedAt).toISOString() : new Date().toISOString(),
+      pushed_at: repo.pushedAt ? new Date(repo.pushedAt).toISOString() : undefined,
+      html_url: repo.htmlUrl,
+    }))
+  },
+})
