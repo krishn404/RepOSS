@@ -22,7 +22,7 @@ interface EnhancedRepository extends Repository {
 
 export default function ContributionPicksPage() {
   const { setActiveNav } = useOpenSourceView()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   const [repositories, setRepositories] = useState<EnhancedRepository[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -36,19 +36,26 @@ export default function ContributionPicksPage() {
   }, [setActiveNav])
 
   useEffect(() => {
+    // Wait for session to be determined (not loading)
+    if (status === "loading") return
+    
     const provider = (session?.user as any)?.provider
     const hasGithub = provider === "github" || !!(session?.user as any)?.githubUsername
     
     // If user logged in via GitHub, skip username input and fetch immediately
-    if (session?.user && hasGithub && provider === "github" && !showUsernameInput && repositories.length === 0) {
+    if (session?.user && hasGithub && provider === "github" && !showUsernameInput && repositories.length === 0 && !isLoading) {
       fetchRecommendations()
     }
     // If user logged in via Google only, automatically show username input on mount
-    else if (session?.user && provider === "google" && !hasGithub && repositories.length === 0) {
+    else if (session?.user && provider === "google" && !hasGithub && repositories.length === 0 && !isLoading) {
+      setShowUsernameInput(true)
+    }
+    // If no session or GitHub auth but no username detected, show input as fallback
+    else if (status === "unauthenticated" && repositories.length === 0 && !isLoading && !showUsernameInput) {
       setShowUsernameInput(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user])
+  }, [session, status])
 
   const fetchRecommendations = useCallback(async (username?: string, forceRefresh = false) => {
     setIsLoading(true)
@@ -99,20 +106,39 @@ export default function ContributionPicksPage() {
       }
 
       const data = await response.json()
-      setRepositories(data.repositories || [])
-      setShowUsernameInput(false)
+      const repos = data.repositories || []
+      setRepositories(repos)
+      
+      // If no repos returned and user is GitHub authenticated, show username input as fallback
+      if (repos.length === 0) {
+        const provider = (session?.user as any)?.provider
+        if (provider === "github") {
+          setShowUsernameInput(true)
+          setError("Unable to fetch recommendations automatically. Please enter your GitHub username.")
+        }
+      } else {
+        setShowUsernameInput(false)
+      }
+      
       setLoadingProgress(100)
       setProgressMessage("Recommendations ready!")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      const errorMessage = err instanceof Error ? err.message : "An error occurred"
+      setError(errorMessage)
       setRepositories([])
       setLoadingProgress(0)
       setProgressMessage("An error occurred")
+      
+      // If GitHub user and fetch failed, show username input as fallback
+      const provider = (session?.user as any)?.provider
+      if (provider === "github") {
+        setShowUsernameInput(true)
+      }
     } finally {
       setIsLoading(false)
       clearInterval(progressInterval)
     }
-  }, [])
+  }, [session])
 
   function renderSkeletons(count = 6) {
     return Array.from({ length: count }).map((_, i) => (
@@ -171,12 +197,10 @@ export default function ContributionPicksPage() {
       </div>
 
       <div className="px-6 py-8 max-w-7xl mx-auto">
-        {/* GitHub username prompt for Google auth users or when showUsernameInput is true */}
-        {session?.user && 
-          !(session?.user as any)?.githubUsername && 
-          repositories.length === 0 && 
+        {/* GitHub username prompt for Google auth users, unauthenticated users, or when auto-fetch fails */}
+        {repositories.length === 0 && 
           !isLoading && 
-          (showUsernameInput || (session?.user as any)?.provider === "google") && (
+          showUsernameInput && (
             <GitHubUsernameInput 
               onSubmit={async (username) => {
                 await fetchRecommendations(username)
@@ -192,15 +216,38 @@ export default function ContributionPicksPage() {
               <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-rose-300 mb-3">{error}</p>
-                <Button
-                  onClick={() => fetchRecommendations(undefined, true)}
-                  variant="outline"
-                  size="sm"
-                  className="border-rose-500/30 hover:bg-rose-500/10"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                  Refresh
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setError(null)
+                      const provider = (session?.user as any)?.provider
+                      if (provider === "github") {
+                        fetchRecommendations(undefined, true)
+                      } else {
+                        setShowUsernameInput(true)
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-rose-500/30 hover:bg-rose-500/10"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                    Try Again
+                  </Button>
+                  {(session?.user as any)?.provider !== "github" && (
+                    <Button
+                      onClick={() => {
+                        setError(null)
+                        setShowUsernameInput(true)
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="border-white/20 hover:bg-white/5"
+                    >
+                      Enter Username
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -228,6 +275,9 @@ export default function ContributionPicksPage() {
             renderSkeletons(6)
           ) : repositories.length > 0 ? (
             repositories.map((repo, index) => <ContributionPicksCard key={repo.id} repo={repo} index={index} />)
+          ) : status === "loading" ? (
+            // Show skeletons while session is loading
+            renderSkeletons(6)
           ) : null}
         </div>
 
